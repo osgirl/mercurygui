@@ -12,8 +12,9 @@ setup(
     packages=find_packages(),
     package_data={
         'mercurygui': ['*.ui'],
-        'mercurygui': ['*.mplstyle']
+        'mercurygui': ['*.mplstyle'],
     },
+    include_package_data = True,
     entry_points={
         'console_scripts': [
             'mercurygui=mercurygui.main:run'
