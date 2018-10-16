@@ -701,6 +701,22 @@ class ReadingsOverview(QtWidgets.QDialog):
                                        'ITC Readings Overview'))
 
 
+def get_qt_app(*args, **kwargs):
+    """
+    Create a new Qt app or return an existing one.
+    """
+    created = False
+    app = QtCore.QCoreApplication.instance()
+
+    if not app:
+        if not args:
+            args = ([''],)
+        app = QtWidgets.QApplication(*args, **kwargs)
+        created = True
+
+    return app, created
+
+
 def run():
 
     from mercuryitc import MercuryITC
@@ -709,13 +725,14 @@ def run():
     MERCURY_ADDRESS = CONF.get('Connection', 'MERCURY_ADDRESS')
     mercury = MercuryITC(MERCURY_ADDRESS)
 
-    app = QtWidgets.QApplication(sys.argv)
+    app, created = get_qt_app(sys.argv)
 
     feed = MercuryFeed(mercury)
     mercuryGUI = MercuryMonitorApp(feed)
     mercuryGUI.show()
 
-    sys.exit(app.exec_())
+    if created:
+        sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
