@@ -29,9 +29,9 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg
                                                 NavigationToolbar)
 
 # custom imports
-from mercury_gui.feed import MercuryFeed
-from mercury_gui.main_ui import Ui_MainWindow
-from mercury_gui.address_dialog import AddressDialog
+from mercurygui.feed import MercuryFeed
+from mercurygui.main_ui import Ui_MainWindow
+from mercurygui.address_dialog import AddressDialog
 
 direct = os.path.dirname(os.path.realpath(__file__))
 STYLE_PATH = os.path.join(direct, 'figure_style.mplstyle')
