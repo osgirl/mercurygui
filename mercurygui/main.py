@@ -459,7 +459,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         # find user home directory
         homePath = os.path.expanduser('~')
-        self.loggingPath = os.path.join(homePath, '.CustomXepr', 'LOG_FILES')
+        self.loggingPath = os.path.join(homePath, '.mercurygui', 'LOG_FILES')
 
         # create folder '~/.CustomXepr/LOG_FILES' if not present
         if not os.path.exists(self.loggingPath):

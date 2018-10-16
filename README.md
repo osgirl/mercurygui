@@ -13,4 +13,4 @@ The user interface for the cryostat plots historic temperature readings going ba
 - Python 2.7 or 3.x
 
 ## Acknowledgements
-Config file modules are based on the implementation from [Spyder](https://github.com/spyder-ide).
+Config modules are based on the implementation from [Spyder](https://github.com/spyder-ide).
