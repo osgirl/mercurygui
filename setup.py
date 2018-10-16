@@ -12,6 +12,7 @@ setup(
     packages=find_packages(),
     package_data={
         'mercurygui': ['*.ui']
+        'mercurygui': ['*.mplstyle']
     },
     entry_points={
         'console_scripts': [
@@ -27,10 +28,7 @@ setup(
         'mercuryitc',
         'matplotlib',
         'pyvisa',
-        'setuptools',
-        'QDarkStyle',
         'repr',
-        'spyder'
     ],
     zip_safe=False,
     keywords='mercurygui',
