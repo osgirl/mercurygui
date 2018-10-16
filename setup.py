@@ -11,10 +11,8 @@ setup(
     long_description=open('README.md').read(),
     packages=find_packages(),
     package_data={
-        'mercurygui': ['*.ui'],
-        'mercurygui': ['*.mplstyle'],
+        'mercurygui': ['*.ui', '*.mplstyle'],
     },
-    include_package_data = True,
     entry_points={
         'console_scripts': [
             'mercurygui=mercurygui.main:run'
