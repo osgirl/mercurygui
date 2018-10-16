@@ -16,7 +16,7 @@ Attribution-NonCommercial-NoDerivs 2.0 UK: England & Wales License.
 
 from __future__ import division, absolute_import
 from qtpy import QtCore, QtWidgets
-from utils.led_indicator_widget import LedIndicator
+from mercurygui.utils.led_indicator_widget import LedIndicator
 
 
 class Ui_MainWindow(object):

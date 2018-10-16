@@ -13,12 +13,10 @@ quickly load a user config file.
 To add:
 * More feed settings, such as refresh rate, etc?
 """
-import getpass
-
-# Local import
+# local imports
 from config.user import UserConfig
 
-PACKAGE_NAME = 'MercuryGUI'
+PACKAGE_NAME = 'mercurygui'
 SUBFOLDER = '.%s' % PACKAGE_NAME
 
 
@@ -54,10 +52,10 @@ CONF_VERSION = '1.0.0'
 
 # Main configuration instance
 try:
-    CONF = UserConfig('CustomXepr', defaults=DEFAULTS, load=True,
+    CONF = UserConfig(PACKAGE_NAME, defaults=DEFAULTS, load=True,
                       version=CONF_VERSION, subfolder=SUBFOLDER, backup=True,
                       raw_mode=True)
 except Exception:
-    CONF = UserConfig('CustomXepr', defaults=DEFAULTS, load=False,
+    CONF = UserConfig(PACKAGE_NAME, defaults=DEFAULTS, load=False,
                       version=CONF_VERSION, subfolder=SUBFOLDER, backup=True,
                       raw_mode=True)

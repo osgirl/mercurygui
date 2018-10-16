@@ -15,7 +15,7 @@ import sys
 import os
 import logging
 
-from config.main import CONF
+from mercurygui.config.main import CONF
 
 logger = logging.getLogger(__name__)
 

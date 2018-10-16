@@ -2,7 +2,7 @@
 from __future__ import division, absolute_import
 from qtpy import QtWidgets, uic
 import os
-from config.main import CONF
+from mercurygui.config.main import CONF
 
 
 class AddressDialog(QtWidgets.QDialog):

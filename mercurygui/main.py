@@ -28,7 +28,7 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg
                                                 NavigationToolbar2QT as
                                                 NavigationToolbar)
 
-# custom imports
+# loacl imports
 from mercurygui.feed import MercuryFeed
 from mercurygui.main_ui import Ui_MainWindow
 from mercurygui.address_dialog import AddressDialog
