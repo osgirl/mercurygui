@@ -15,10 +15,10 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'mercurygui=mercurygui.main:main'
+            'mercurygui=mercurygui.main:run'
         ],
         'gui_scripts': [
-            'mercurygui=mercurygui.main:main'
+            'mercurygui=mercurygui.main:run'
         ]
     },
     install_requires=[

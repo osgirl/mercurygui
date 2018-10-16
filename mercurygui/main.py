@@ -701,7 +701,7 @@ class ReadingsOverview(QtWidgets.QDialog):
                                        'ITC Readings Overview'))
 
 
-def main():
+def run():
 
     from mercuryitc import MercuryiTC
     from config.main import CONF
@@ -716,3 +716,7 @@ def main():
     mercuryGUI.show()
 
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    run()
