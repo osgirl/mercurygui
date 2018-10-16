@@ -11,7 +11,7 @@ setup(
     long_description=open('README.md').read(),
     packages=find_packages(),
     package_data={
-        'mercurygui': ['*.ui']
+        'mercurygui': ['*.ui'],
         'mercurygui': ['*.mplstyle']
     },
     entry_points={
