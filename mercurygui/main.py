@@ -703,11 +703,11 @@ class ReadingsOverview(QtWidgets.QDialog):
 
 def run():
 
-    from mercuryitc import MercuryiTC
+    from mercuryitc import MercuryITC
     from config.main import CONF
 
     MERCURY_ADDRESS = CONF.get('Connection', 'MERCURY_ADDRESS')
-    mercury = MercuryiTC(MERCURY_ADDRESS)
+    mercury = MercuryITC(MERCURY_ADDRESS)
 
     app = QtWidgets.QApplication(sys.argv)
 
