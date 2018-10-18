@@ -207,9 +207,6 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.dpts = 500  # maximum number of data points to plot
 
-        # set update_plot to be executed every time the slider position changes
-        self.horizontalSlider.valueChanged.connect(self._update_plot)
-
     @QtCore.Slot(bool)
     def _update_GUI_connection(self, connected):
         if connected:
@@ -284,6 +281,9 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         # conect menu bar item to show module dialog if mercury is running
         self.modulesAction.triggered.connect(self.feed.dialog.show)
 
+        # set update_plot to be executed every time the slider position changes
+        self.horizontalSlider.valueChanged.connect(self._update_plot)
+
     def _disconnect_slots(self):
         self._display_error('Connection lost.')
 
@@ -318,6 +318,9 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.gf2_checkbox.clicked.disconnect(self.change_flow_auto)
         self.h1_edit.returnPressed.disconnect(self.change_heater)
         self.h2_checkbox.clicked.disconnect(self.change_heater_auto)
+
+        # disconnect update_plo
+        self.horizontalSlider.valueChanged.disconnect(self._update_plot)
 
     def _display_message(self, text):
         self.statusBar.showMessage('    %s' % text, 5000)
