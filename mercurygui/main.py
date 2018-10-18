@@ -518,7 +518,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.feed.control.ramp = float(self.r1_edit.text())
         self._display_message('Ramp = ' + self.r1_edit.text() + ' K/min')
 
-    @QtCore.Slot()
+    @QtCore.Slot(bool)
     def change_ramp_auto(self, checked):
         if checked:
             self.feed.control.ramp_enable = 'ON'
