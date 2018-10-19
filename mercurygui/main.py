@@ -490,12 +490,16 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
             filePath.join('.txt')
 
         title = '# temperature trace, saved on '+time.strftime('%d/%m/%Y')+'\n'
-        header = '\t'.join(['Time (sec)', 'Temperature (K)'])
+        heater_vlim = self.feed.heater.vlim
+        header = '\t'.join(['Time (sec)', 'Temperature (K)',
+                            'Heater (% of %sV)' % heater_vlim, 'Gas flow (%)'])
 
         data_matrix = np.concatenate((self.xData[:, np.newaxis],
-                                      self.yDataT[:, np.newaxis]), axis=1)
+                                      self.yDataT[:, np.newaxis],
+                                      self.yDataH[:, np.newaxis],
+                                      self.yDataG[:, np.newaxis]), axis=1)
 
-        np.savetxt(filePath, data_matrix, fmt='%.9E', delimiter='\t',
+        np.savetxt(filePath, data_matrix, fmt='%.5E', delimiter='\t',
                    newline='\n', header=header, comments=title)
 
     def log_temperature_data(self):
