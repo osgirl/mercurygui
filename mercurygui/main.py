@@ -110,6 +110,9 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.feed.exit_
         self.deleteLater()
 
+    def closeEvent(self):
+        self.exit_()
+
     def _set_up_menubar(self):
         """
         Connects menu bar items to functions, sets the initialactivated status.
