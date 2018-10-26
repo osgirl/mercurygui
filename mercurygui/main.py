@@ -110,7 +110,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.feed.exit_
         self.deleteLater()
 
-    def closeEvent(self):
+    def closeEvent(self, event):
         self.exit_()
 
     def _set_up_menubar(self):
