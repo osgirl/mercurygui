@@ -346,10 +346,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.heater_percent_Signal.emit(str(round(readings['HeaterPercent'], 1)))
 
         # emit gas flow signals
-        if readings['FlowAuto'] == 'ON':
-            self.flow_auto_Signal.emit(True)
-        elif readings['FlowAuto'] == 'OFF':
-            self.flow_auto_Signal.emit(False)
+        self.flow_auto_Signal.emit(readings['FlowAuto'] == 'ON')
         self.flow_Signal.emit(str(round(readings['FlowPercent'], 1)))
         self.flow_min_Signal.emit('Gas flow (min = %s%%):' % readings['FlowMin'])
 
@@ -357,10 +354,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.t_Signal.emit(str(round(readings['Temp'], 3)))
         self.t_setpoint_Signal.emit(str(readings['TempSetpoint']))
         self.t_ramp_Signal.emit(str(readings['TempRamp']))
-        if readings['TempRampEnable'] == 'ON':
-            self.t_ramp_enable_Signal.emit(True)
-        elif readings['TempRampEnable'] == 'OFF':
-            self.t_ramp_enable_Signal.emit(False)
+        self.t_ramp_enable_Signal.emit(readings['TempRampEnable'] == 'ON')
 
     @QtCore.Slot(object)
     def _update_plot_data(self, readings):
@@ -533,7 +527,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         if checked:
             self.feed.control.ramp_enable = 'ON'
             self._display_message('Ramp is turned ON')
-        elif not checked:
+        else:
             self.feed.control.ramp_enable = 'OFF'
             self._display_message('Ramp is turned OFF')
 
@@ -549,7 +543,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
             self._display_message('Gas flow is automatically controlled.')
             self.gf1_edit.setReadOnly(True)
             self.gf1_edit.setEnabled(False)
-        elif not checked:
+        else:
             self.feed.control.flow_auto = 'OFF'
             self._display_message('Gas flow is manually controlled.')
             self.gf1_edit.setReadOnly(False)
@@ -567,7 +561,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
             self._display_message('Heater is automatically controlled.')
             self.h1_edit.setReadOnly(True)
             self.h1_edit.setEnabled(False)
-        elif not checked:
+        else:
             self.feed.control.heater_auto = 'OFF'
             self._display_message('Heater is manually controlled.')
             self.h1_edit.setReadOnly(False)
@@ -685,7 +679,7 @@ class ReadingsOverview(QtWidgets.QDialog):
         self.getreading = ('self.mercury.modules[%s].%s'
                            % (i, self.comboBox[i].currentText()))
         reading = eval(self.getreading)
-        if type(reading) == tuple:
+        if isinstance(reading, tuple):
             reading = ''.join(map(str, reading))
         reading = str(reading)
         self.lineEdit[i].setText(reading)
