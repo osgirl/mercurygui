@@ -15,7 +15,7 @@ The user interface for the cryostat plots historic temperature readings going ba
 ## Installation
 Download or clone the repository. Install the package by running:
 ```console
-$ pip install git+https://github.com/OE-FET/keithleygui
+$ pip install git+https://github.com/OE-FET/mercurygui
 ```
 
 ## Acknowledgements
