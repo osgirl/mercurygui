@@ -13,11 +13,10 @@ The user interface for the cryostat plots historic temperature readings going ba
 - Python 2.7 or 3.x
 
 ## Installation
-Download or clone the repository. Install the package by running 
+Download or clone the repository. Install the package by running:
 ```console
-$ pip install /path/to/folder
+$ pip install git+https://github.com/OE-FET/keithleygui
 ```
-where "/path/to/folder" is the path to the folder containing setup.py. 
 
 ## Acknowledgements
 Config modules are based on the implementation from [Spyder](https://github.com/spyder-ide).
