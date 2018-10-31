@@ -110,6 +110,7 @@ class MercuryFeed(QtWidgets.QWidget):
     def exit_(self):
         if self.worker:
             self.worker.running = False
+            self.worker.terminate = True
             print('closing wroker')
             self.thread.terminate()
             self.thread.wait()
@@ -232,12 +233,15 @@ class DataCollectionWorker(QtCore.QObject):
         self.refresh = refresh
         self.mercury = mercury
         self.modNumbers = modNumbers
-        self.running = True
+
         self.readings = {}
         self.updateModules(self.modNumbers)
 
+        self.running = True
+        self.terminate = False
+
     def run(self):
-        while True:
+        while not self.terminate:
             if self.running:
                 try:
                     # proceed with full update
