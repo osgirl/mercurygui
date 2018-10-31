@@ -107,7 +107,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setGeometry(xPos, yPos, width, height)
 
     def exit_(self):
-        self.feed.exit_
+        self.feed.exit_()
         self.deleteLater()
 
     def closeEvent(self, event):
