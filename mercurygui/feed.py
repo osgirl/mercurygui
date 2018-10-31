@@ -110,6 +110,7 @@ class MercuryFeed(QtWidgets.QWidget):
     def exit_(self):
         if self.worker:
             self.worker.running = False
+            print('closing wroker')
             self.thread.quit()
             self.thread.wait()
 
