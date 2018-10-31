@@ -710,8 +710,10 @@ def run():
     from mercuryitc import MercuryITC
     from config.main import CONF
 
-    MERCURY_ADDRESS = CONF.get('Connection', 'MERCURY_ADDRESS')
-    mercury = MercuryITC(MERCURY_ADDRESS)
+    MERCURY_ADDRESS = CONF.get('Connection', 'VISA_ADDRESS')
+    VISA_LIBRARY = CONF.get('Connection', 'VISA_LIBRARY')
+
+    mercury = MercuryITC(MERCURY_ADDRESS, VISA_LIBRARY)
 
     app = QtWidgets.QApplication(sys.argv)
 

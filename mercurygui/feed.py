@@ -290,14 +290,9 @@ if __name__ == '__main__':
 
     # check if event loop is already running (e.g. in IPython),
     # otherwise create a new one
-    created = 0
-    app = QtCore.QCoreApplication.instance()
-    if app is None:
-        app = QtWidgets.QApplication(sys.argv)
-        created = 1
+    app = QtWidgets.QApplication(sys.argv)
 
     mercury = MercuryITC(CONF.get('Connection', 'VISA_ADDRESS'))
     feed = MercuryFeed(mercury)
 
-    if created == 1:
-        sys.exit(app.exec_())
+    sys.exit(app.exec_())
