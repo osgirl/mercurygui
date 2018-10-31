@@ -31,7 +31,7 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg
 # loacl imports
 from mercurygui.feed import MercuryFeed
 from mercurygui.main_ui import Ui_MainWindow
-from mercurygui.address_dialog import AddressDialog
+from mercurygui.connection_dialog import ConnectionDialog
 
 direct = os.path.dirname(os.path.realpath(__file__))
 STYLE_PATH = os.path.join(direct, 'figure_style.mplstyle')
@@ -62,7 +62,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.set_intial_position()
 
         # create popup Widgets
-        self.addressDialog = AddressDialog(feed)
+        self.connectionDialog = ConnectionDialog(feed)
         self.readingsWindow = None
 
         # Set up main layout and widgets as defined in main_ui.py
@@ -123,7 +123,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.readingsAction.triggered.connect(self._on_readings_clicked)
         self.connectAction.triggered.connect(self.feed.connect)
         self.disconnectAction.triggered.connect(self.feed.disconnect)
-        self.updateAddressAction.triggered.connect(self.addressDialog.show)
+        self.updateAddressAction.triggered.connect(self.connectionDialog.show)
 
         # initially disable menu bar items, will be enabled later individually
         self.connectAction.setEnabled(True)
