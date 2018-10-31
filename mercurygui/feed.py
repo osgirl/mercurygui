@@ -91,7 +91,6 @@ class MercuryFeed(QtWidgets.QWidget):
         # stop worker thread
         if self.worker:
             self.worker.running = False
-            self.thread.terminate()
 
         # disconnect mercury
         self.connectedSignal.emit(False)
