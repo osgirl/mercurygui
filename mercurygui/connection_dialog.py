@@ -11,6 +11,7 @@ import os.path as osp
 import pkg_resources as pkgr
 import visa
 import pyvisa
+import time
 from qtpy import QtCore, QtWidgets, uic
 
 # local imports
@@ -91,6 +92,7 @@ class ConnectionDialog(QtWidgets.QDialog):
         # TODO: this needs testing
         if self.instr.connected:
             self.instr.disconnect()
+            time.sleep(0.2)
 
         self.instr.rm.close()
 
