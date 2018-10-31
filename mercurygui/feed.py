@@ -131,9 +131,7 @@ class MercuryFeed(QtWidgets.QWidget):
 
             # start data collection thread
             self.thread = QtCore.QThread()
-            self.worker = DataCollectionWorker(self.refresh,
-                                               self.mercury.modules,
-                                               self.dialog.modNumbers)
+            self.worker = DataCollectionWorker(self.refresh, self.mercury, self.dialog.modNumbers)
             self.worker.moveToThread(self.thread)
             self.worker.readingsSignal.connect(self._getData)
             self.worker.connectedSignal.connect(self.connectedSignal.emit)
@@ -228,10 +226,10 @@ class DataCollectionWorker(QtCore.QObject):
     readingsSignal = QtCore.Signal(object)
     connectedSignal = QtCore.Signal(bool)
 
-    def __init__(self, refresh, mercuryModules, modNumbers):
+    def __init__(self, refresh, mercury, modNumbers):
         QtCore.QObject.__init__(self)
         self.refresh = refresh
-        self.mercuryModules = mercuryModules
+        self.mercury = mercury
         self.modNumbers = modNumbers
         self.running = True
         self.readings = {}
@@ -253,6 +251,9 @@ class DataCollectionWorker(QtCore.QObject):
                     logger.warning('Connection to MercuryiTC lost.')
             elif not self.running:
                 QtCore.QThread.msleep(int(self.refresh*1000))
+                if self.mercury.connected:
+                    self.running = True
+                    self.connectedSignal.emit(True)
 
     def getReadings(self):
         # read heater data
@@ -278,10 +279,10 @@ class DataCollectionWorker(QtCore.QObject):
         """
         Updates module list after the new modules have been selected in dialog.
         """
-        self.gasflow = self.mercuryModules[modNumbers['gasflow']]
-        self.heater = self.mercuryModules[modNumbers['heater']]
-        self.temperature = self.mercuryModules[modNumbers['temperature']]
-        self.control = self.mercuryModules[modNumbers['temperature']+1]
+        self.gasflow = self.mercury.modules[modNumbers['gasflow']]
+        self.heater = self.mercury.modules[modNumbers['heater']]
+        self.temperature = self.mercury.modules[modNumbers['temperature']]
+        self.control = self.mercury.modules[modNumbers['temperature']+1]
 
 
 # if we're running the file directly and not importing it
