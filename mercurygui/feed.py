@@ -125,7 +125,6 @@ class MercuryFeed(QtWidgets.QWidget):
         """
         if self.worker and self.thread:
             self.worker.running = True
-            self.thread.start()
         else:
             self.dialog = SensorDialog(self.mercury.modules)
             self.dialog.accepted.connect(self.updateModules)
@@ -239,18 +238,21 @@ class DataCollectionWorker(QtCore.QObject):
         self.updateModules(self.modNumbers)
 
     def run(self):
-        while self.running:
-            try:
-                # proceed with full update
-                self.getReadings()
-                # sleep untill next scheduled refresh
+        while True:
+            if self.running:
+                try:
+                    # proceed with full update
+                    self.getReadings()
+                    # sleep untill next scheduled refresh
+                    QtCore.QThread.msleep(int(self.refresh*1000))
+                except:
+                    # emit signal if connection is lost
+                    self.connectedSignal.emit(False)
+                    # stop worker thread
+                    self.running = False
+                    logger.warning('Connection to MercuryiTC lost.')
+            else:
                 QtCore.QThread.msleep(int(self.refresh*1000))
-            except:
-                # emit signal if connection is lost
-                self.connectedSignal.emit(False)
-                # stop worker thread
-                self.running = False
-                logger.warning('Connection to MercuryiTC lost.')
 
     def getReadings(self):
         # read heater data

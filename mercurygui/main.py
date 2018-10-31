@@ -298,12 +298,10 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         # disconnect GUI slots from worker
         self.heater_volt_Signal.disconnect(self.h1_label.setText)
         self.heater_auto_Signal.disconnect(self.h2_checkbox.setChecked)
-        # self.heater_auto_Signal.disconnect(lambda b: self.h1_edit.setEnabled(not b))
         self.heater_auto_Signal.disconnect(self.h1_edit.setReadOnly)
         self.heater_percent_Signal.disconnect(self.h1_edit.updateText)
 
         self.flow_auto_Signal.disconnect(self.gf2_checkbox.setChecked)
-        # self.flow_auto_Signal.disconnect(lambda b: self.gf1_edit.setEnabled(not b))
         self.flow_auto_Signal.disconnect(self.gf1_edit.setReadOnly)
         self.flow_Signal.disconnect(self.gf1_edit.updateText)
         self.flow_min_Signal.disconnect(self.gf1_label.setText)
@@ -708,7 +706,7 @@ class ReadingsOverview(QtWidgets.QDialog):
 def run():
 
     from mercuryitc import MercuryITC
-    from config.main import CONF
+    from mercurygui.config.main import CONF
 
     MERCURY_ADDRESS = CONF.get('Connection', 'VISA_ADDRESS')
     VISA_LIBRARY = CONF.get('Connection', 'VISA_LIBRARY')
