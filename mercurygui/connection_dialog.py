@@ -11,13 +11,12 @@ import os.path as osp
 import pkg_resources as pkgr
 import visa
 import pyvisa
-import time
 from qtpy import QtCore, QtWidgets, uic
 
 # local imports
-from mercurygui.config.main import CONF
+from keithleygui.config.main import CONF
 
-CONNECTION_UI_PATH = pkgr.resource_filename('mercurygui', 'connection_dialog.ui')
+CONNECTION_UI_PATH = pkgr.resource_filename('keithleygui', 'connection_dialog.ui')
 
 
 class ConnectionDialog(QtWidgets.QDialog):
@@ -92,8 +91,6 @@ class ConnectionDialog(QtWidgets.QDialog):
         # TODO: this needs testing
         if self.instr.connected:
             self.instr.disconnect()
-            time.sleep(0.2)  # wait for pending comminication to finish
-
         self.instr.rm.close()
 
         try:
