@@ -121,8 +121,8 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.showLogAction.triggered.connect(self._on_log_clicked)
         self.exitAction.triggered.connect(self.exit_)
         self.readingsAction.triggered.connect(self._on_readings_clicked)
-        self.connectAction.triggered.connect(self.feed.start)
-        self.disconnectAction.triggered.connect(self.feed.stop)
+        self.connectAction.triggered.connect(self.feed.connect)
+        self.disconnectAction.triggered.connect(self.feed.disconnect)
         self.updateAddressAction.triggered.connect(self.addressDialog.show)
 
         # initially disable menu bar items, will be enabled later individually

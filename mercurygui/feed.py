@@ -87,7 +87,7 @@ class MercuryFeed(QtWidgets.QWidget):
 
     # BASE FUNCTIONALITY CODE
 
-    def stop(self):
+    def disconnect(self):
         # stop worker thread
         if self.worker:
             self.worker.running = False
@@ -97,7 +97,7 @@ class MercuryFeed(QtWidgets.QWidget):
         self.connectedSignal.emit(False)
         self.mercury.disconnect()
 
-    def start(self):
+    def connect(self):
         # connect to mercury
         if not self.mercury.connected:
             self.mercury.connect()
@@ -286,6 +286,8 @@ class DataCollectionWorker(QtCore.QObject):
 # if we're running the file directly and not importing it
 if __name__ == '__main__':
 
+    from mercuryitc import MercuryITC
+
     # check if event loop is already running (e.g. in IPython),
     # otherwise create a new one
     created = 0
@@ -294,8 +296,8 @@ if __name__ == '__main__':
         app = QtWidgets.QApplication(sys.argv)
         created = 1
 
-    feed = MercuryFeed(CONF.get('MercuryFeed', 'MERCURY_IP'),
-                       CONF.get('MercuryFeed', 'MERCURY_PORT'))
+    mercury = MercuryITC(CONF.get('Connection', 'VISA_ADDRESS'))
+    feed = MercuryFeed(mercury)
 
     if created == 1:
         sys.exit(app.exec_())
