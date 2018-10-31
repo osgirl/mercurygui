@@ -251,7 +251,7 @@ class DataCollectionWorker(QtCore.QObject):
                     # stop worker thread
                     self.running = False
                     logger.warning('Connection to MercuryiTC lost.')
-            else:
+            elif not self.running:
                 QtCore.QThread.msleep(int(self.refresh*1000))
 
     def getReadings(self):
