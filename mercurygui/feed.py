@@ -75,6 +75,9 @@ class MercuryFeed(QtWidgets.QWidget):
         self.refresh = refresh
         self.mercury = mercury
         self.visa_address = mercury.visa_address
+        self.visa_library = mercury.visa_library
+        self.rm = mercury.rm
+
         self.thread = None
         self.worker = None
 
