@@ -51,9 +51,9 @@ class ConnectionDialog(QtWidgets.QDialog):
     def _on_auto_checked(self, checked):
         """Switch from automatic to manual visa library selection."""
         if checked:
-            self.labelVisaLib.close()
-            self.lineEditLibrary.close()
-            self.pushButtonChoose.close()
+            self.labelVisaLib.hide()
+            self.lineEditLibrary.hide()
+            self.pushButtonChoose.hide()
             self.lineEditLibrary.setText('')
         else:
             self.labelVisaLib.show()
