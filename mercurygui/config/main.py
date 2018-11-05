@@ -14,7 +14,7 @@ To add:
 * More feed settings, such as refresh rate, etc?
 """
 # local imports
-from config.user import UserConfig
+from mercurygui.config.user import UserConfig
 
 PACKAGE_NAME = 'mercurygui'
 SUBFOLDER = '.%s' % PACKAGE_NAME
