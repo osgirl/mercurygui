@@ -16,8 +16,9 @@ import sys
 import os
 import platform
 import subprocess
+import pkg_resources as pkgr
 import time
-from qtpy import QtGui, QtCore, QtWidgets
+from qtpy import QtGui, QtCore, QtWidgets, uic
 import matplotlib as mpl
 from matplotlib.figure import Figure
 import numpy as np
@@ -30,33 +31,34 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg
 
 # loacl imports
 from mercurygui.feed import MercuryFeed
-from mercurygui.main_ui import Ui_MainWindow
 from mercurygui.connection_dialog import ConnectionDialog
+from mercurygui.utils.led_indicator_widget import LedIndicator
 
-direct = os.path.dirname(os.path.realpath(__file__))
-STYLE_PATH = os.path.join(direct, 'figure_style.mplstyle')
+MPL_STYLE_PATH = pkgr.resource_filename('mercurygui', 'figure_style.mplstyle')
+MAIN_UI_PATH = pkgr.resource_filename('mercurygui', 'main.ui')
+
 logger = logging.getLogger(__name__)
 
 
-class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
+class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     # signals carrying converted data to GUI
     heater_volt_Signal = QtCore.Signal(str)
+    heater_percent_Signal = QtCore.Signal(float)
     heater_auto_Signal = QtCore.Signal(bool)
-    heater_percent_Signal = QtCore.Signal(str)
 
     flow_auto_Signal = QtCore.Signal(bool)
-    flow_Signal = QtCore.Signal(str)
+    flow_Signal = QtCore.Signal(float)
     flow_min_Signal = QtCore.Signal(str)
-    flow_setpoint_Signal = QtCore.Signal(str)
 
     t_Signal = QtCore.Signal(str)
-    t_setpoint_Signal = QtCore.Signal(str)
-    t_ramp_Signal = QtCore.Signal(str)
+    t_setpoint_Signal = QtCore.Signal(float)
+    t_ramp_Signal = QtCore.Signal(float)
     t_ramp_enable_Signal = QtCore.Signal(bool)
 
     def __init__(self, feed):
         super(self.__class__, self).__init__()
+        uic.loadUi(MAIN_UI_PATH, self)
 
         self.feed = feed
         self.set_intial_position()
@@ -65,8 +67,12 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.connectionDialog = ConnectionDialog(feed.mercury)
         self.readingsWindow = None
 
-        # Set up main layout and widgets as defined in main_ui.py
-        self.setupUi(self)
+        # create LED indicator
+        self.led = LedIndicator(self)
+        self.led.setDisabled(True)  # Make the led non clickable
+        self.statusbar.addPermanentWidget(self.led)
+        self.led.setChecked(False)
+
         # Set up figure for data plotting
         self._setup_figure()
         # Connect menu bar actions
@@ -101,8 +107,8 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
         xPos = screen.left() + screen.width()*2/3
         yPos = screen.top()
-        width = 600
-        height = screen.height()*2/3
+        width = 550
+        height = 650
 
         self.setGeometry(xPos, yPos, width, height)
 
@@ -139,14 +145,14 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         color = [x/255 for x in color]
 
         # create figure and set axis labels
-        with mpl.style.context(['default', STYLE_PATH]):
+        with mpl.style.context(['default', MPL_STYLE_PATH]):
             self.fig = Figure(facecolor=color)
 
             d = {'height_ratios': [5, 1]}
             (self.ax1, self.ax2) = self.fig.subplots(2, sharex=True,
                                                      gridspec_kw=d)
             self.fig.subplots_adjust(hspace=0, bottom=0.07, top=0.97,
-                                     left=0.07, right=0.93)
+                                     left=0.08, right=0.93)
 
         self.ax1.tick_params(axis='both', which='major', direction='out',
                              labelcolor='black', color=[0.5, 0.5, 0.5, 1],
@@ -259,17 +265,17 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.heater_auto_Signal.connect(self.h2_checkbox.setChecked)
         self.heater_auto_Signal.connect(lambda b: self.h1_edit.setEnabled(not b))
         self.heater_auto_Signal.connect(self.h1_edit.setReadOnly)
-        self.heater_percent_Signal.connect(self.h1_edit.updateText)
+        self.heater_percent_Signal.connect(self.h1_edit.updateValue)
 
         self.flow_auto_Signal.connect(self.gf2_checkbox.setChecked)
         self.flow_auto_Signal.connect(lambda b: self.gf1_edit.setEnabled(not b))
         self.flow_auto_Signal.connect(self.gf1_edit.setReadOnly)
-        self.flow_Signal.connect(self.gf1_edit.updateText)
+        self.flow_Signal.connect(self.gf1_edit.updateValue)
         self.flow_min_Signal.connect(self.gf1_label.setText)
 
         self.t_Signal.connect(self.t1_reading.setText)
-        self.t_setpoint_Signal.connect(self.t2_edit.updateText)
-        self.t_ramp_Signal.connect(self.r1_edit.updateText)
+        self.t_setpoint_Signal.connect(self.t2_edit.updateValue)
+        self.t_ramp_Signal.connect(self.r1_edit.updateValue)
         self.t_ramp_enable_Signal.connect(self.r2_checkbox.setChecked)
 
         # connect user input to change mercury settings
@@ -299,16 +305,16 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.heater_volt_Signal.disconnect(self.h1_label.setText)
         self.heater_auto_Signal.disconnect(self.h2_checkbox.setChecked)
         self.heater_auto_Signal.disconnect(self.h1_edit.setReadOnly)
-        self.heater_percent_Signal.disconnect(self.h1_edit.updateText)
+        self.heater_percent_Signal.disconnect(self.h1_edit.updateValue)
 
         self.flow_auto_Signal.disconnect(self.gf2_checkbox.setChecked)
         self.flow_auto_Signal.disconnect(self.gf1_edit.setReadOnly)
-        self.flow_Signal.disconnect(self.gf1_edit.updateText)
+        self.flow_Signal.disconnect(self.gf1_edit.updateValue)
         self.flow_min_Signal.disconnect(self.gf1_label.setText)
 
         self.t_Signal.disconnect(self.t1_reading.setText)
-        self.t_setpoint_Signal.disconnect(self.t2_edit.updateText)
-        self.t_ramp_Signal.disconnect(self.r1_edit.updateText)
+        self.t_setpoint_Signal.disconnect(self.t2_edit.updateValue)
+        self.t_ramp_Signal.disconnect(self.r1_edit.updateValue)
         self.t_ramp_enable_Signal.disconnect(self.r2_checkbox.setChecked)
 
         # disconnect user input from mercury
@@ -324,10 +330,10 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.horizontalSlider.valueChanged.disconnect(self._update_plot)
 
     def _display_message(self, text):
-        self.statusBar.showMessage('    %s' % text, 5000)
+        self.statusbar.showMessage('    %s' % text, 5000)
 
     def _display_error(self, text):
-        self.statusBar.showMessage('    %s' % text)
+        self.statusbar.showMessage('    %s' % text)
 
     @QtCore.Slot(object)
     def fetch_readings(self, readings):
@@ -337,21 +343,18 @@ class MercuryMonitorApp(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         # emit heater signals
         self.heater_volt_Signal.emit('Heater, %s V:' % readings['HeaterVolt'])
-        if readings['HeaterAuto'] == 'ON':
-            self.heater_auto_Signal.emit(True)
-        elif readings['HeaterAuto'] == 'OFF':
-            self.heater_auto_Signal.emit(False)
-        self.heater_percent_Signal.emit(str(round(readings['HeaterPercent'], 1)))
+        self.heater_auto_Signal.emit(readings['HeaterAuto'] == 'ON')
+        self.heater_percent_Signal.emit(readings['HeaterPercent'])
 
         # emit gas flow signals
         self.flow_auto_Signal.emit(readings['FlowAuto'] == 'ON')
-        self.flow_Signal.emit(str(round(readings['FlowPercent'], 1)))
+        self.flow_Signal.emit(readings['FlowPercent'])
         self.flow_min_Signal.emit('Gas flow (min = %s%%):' % readings['FlowMin'])
 
         # emit temperature signals
         self.t_Signal.emit(str(round(readings['Temp'], 3)))
-        self.t_setpoint_Signal.emit(str(readings['TempSetpoint']))
-        self.t_ramp_Signal.emit(str(readings['TempRamp']))
+        self.t_setpoint_Signal.emit(readings['TempSetpoint'])
+        self.t_ramp_Signal.emit(readings['TempRamp'])
         self.t_ramp_enable_Signal.emit(readings['TempRampEnable'] == 'ON')
 
     @QtCore.Slot(object)
