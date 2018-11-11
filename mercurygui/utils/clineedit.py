@@ -8,13 +8,19 @@ class CLineEdit(QtWidgets.QLineEdit):
         super(CLineEdit, self).__init__(parent)
 
     def updateText(self, text):
+        """Only update if widget is not in focus / beeing edited."""
         if not self.hasFocus():
             self.setText(text)
         else:
             pass
 
     def updateValue(self, value):
+        """Only update if widget is not in focus / beeing edited."""
         if not self.hasFocus():
             self.setText(str(round(value, 1)))
         else:
             pass
+
+    def value(self):
+        """Convert text value to float."""
+        return float(self.text())

@@ -509,7 +509,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def change_t_setpoint(self):
-        newT = float(self.t2_edit.text())
+        newT = self.t2_edit.value()
 
         if newT < 310 and newT > 3.5:
             self._display_message('T_setpoint = %s K' % newT)
@@ -520,8 +520,8 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def change_ramp(self):
-        self.feed.control.ramp = float(self.r1_edit.text())
-        self._display_message('Ramp = ' + self.r1_edit.text() + ' K/min')
+        self.feed.control.ramp = self.r1_edit.value()
+        self._display_message('Ramp = %s K/min' % self.r1_edit.value())
 
     @QtCore.Slot(bool)
     def change_ramp_auto(self, checked):
@@ -534,8 +534,8 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def change_flow(self):
-        self.feed.control.flow = float(self.gf1_edit.text())
-        self._display_message('Gas flow  = ' + self.gf1_edit.text() + '%')
+        self.feed.control.flow = self.gf1_edit.value()
+        self._display_message('Gas flow  = %s%%' % self.gf1_edit.value())
 
     @QtCore.Slot(bool)
     def change_flow_auto(self, checked):
@@ -552,8 +552,8 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def change_heater(self):
-        self.feed.control.heater = float(self.h1_edit.text())
-        self._display_message('Heater power  = ' + self.h1_edit.text() + '%')
+        self.feed.control.heater = self.h1_edit.value()
+        self._display_message('Heater power  = %s%%' % self.h1_edit.value())
 
     @QtCore.Slot(bool)
     def change_heater_auto(self, checked):
