@@ -62,7 +62,6 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         uic.loadUi(MAIN_UI_PATH, self)
 
         self.feed = feed
-        self.set_intial_position()
 
         # create popup Widgets
         self.connectionDialog = ConnectionDialog(feed.mercury)
