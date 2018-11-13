@@ -461,6 +461,16 @@ QStatusBar::item {border: 0px solid black };</string>
    <header>mercurygui.utils.clineedit.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>r2_checkbox</tabstop>
+  <tabstop>gf2_checkbox</tabstop>
+  <tabstop>h2_checkbox</tabstop>
+  <tabstop>t2_edit</tabstop>
+  <tabstop>r1_edit</tabstop>
+  <tabstop>gf1_edit</tabstop>
+  <tabstop>h1_edit</tabstop>
+  <tabstop>horizontalSlider</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
