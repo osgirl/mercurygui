@@ -33,6 +33,7 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg
 from mercurygui.feed import MercuryFeed
 from mercurygui.connection_dialog import ConnectionDialog
 from mercurygui.utils.led_indicator_widget import LedIndicator
+from mercurygui.config.main import CONF
 
 MPL_STYLE_PATH = pkgr.resource_filename('mercurygui', 'figure_style.mplstyle')
 MAIN_UI_PATH = pkgr.resource_filename('mercurygui', 'main.ui')
@@ -75,6 +76,8 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
         # Set up figure for data plotting
         self._setup_figure()
+        # restore previous window geometry
+        self.restoreGeometry()
         # Connect menu bar actions
         self._set_up_menubar()
         # accept only numbers as input for fields
@@ -102,18 +105,20 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
 # =================== BASIC UI SETUP ==========================================
 
-    def set_intial_position(self):
-        screen = QtWidgets.QDesktopWidget().screenGeometry(self)
+    def restoreGeometry(self):
+        self.move(CONF.get('Window', 'x'), CONF.get('Window', 'y'))
+        self.resize(CONF.get('Window', 'width'), CONF.get('Window', 'height'))
 
-        xPos = screen.left() + screen.width()*2/3
-        yPos = screen.top()
-        width = 550
-        height = 650
-
-        self.setGeometry(xPos, yPos, width, height)
+    def saveGeometry(self):
+        geo = self.geometry()
+        CONF.set('Window', 'height', geo.height())
+        CONF.set('Window', 'width', geo.width())
+        CONF.set('Window', 'x', geo.x())
+        CONF.set('Window', 'y', geo.y())
 
     def exit_(self):
         self.feed.exit_()
+        self.saveGeometry()
         self.deleteLater()
 
     def closeEvent(self, event):
@@ -717,12 +722,13 @@ def run():
     mercury = MercuryITC(MERCURY_ADDRESS, VISA_LIBRARY)
 
     app = QtWidgets.QApplication(sys.argv)
+    app.aboutToQuit.connect(app.deleteLater)
 
     feed = MercuryFeed(mercury)
     mercuryGUI = MercuryMonitorApp(feed)
     mercuryGUI.show()
 
-    sys.exit(app.exec_())
+    app.exec_()
 
 
 if __name__ == '__main__':

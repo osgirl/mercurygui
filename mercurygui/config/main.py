@@ -24,6 +24,13 @@ SUBFOLDER = '.%s' % PACKAGE_NAME
 #  Defaults
 # =============================================================================
 DEFAULTS = [
+            ('Window',
+             {
+              'x': 0,
+              'y': 0,
+              'width': 550,
+              'height': 650,
+              }),
             ('Connection',
              {
               'VISA_ADDRESS': 'TCPIP0::172.20.91.43::7020::SOCKET',

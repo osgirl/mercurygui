@@ -104,13 +104,13 @@
        <widget class="CLineEdit" name="h1_edit">
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -145,13 +145,13 @@
        <widget class="CLineEdit" name="t2_edit">
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -167,13 +167,13 @@
        <widget class="CLineEdit" name="r1_edit">
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
@@ -223,13 +223,13 @@
        <widget class="CLineEdit" name="gf1_edit">
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>50</width>
+          <width>60</width>
           <height>16777215</height>
          </size>
         </property>
