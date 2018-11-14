@@ -197,7 +197,6 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
         # adapt text edit colors to graoh colors
         self.t1_reading.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc0]))
-        self.t1_unit.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc0]))
 
         self.gf1_edit.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc1]))
         self.h1_edit.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc2]))
