@@ -360,7 +360,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.flow_min_Signal.emit('Gas flow (min = %s%%):' % readings['FlowMin'])
 
         # emit temperature signals
-        self.t_Signal.emit(str(round(readings['Temp'], 3)))
+        self.t_Signal.emit('%s K' % str(round(readings['Temp'], 3)))
         self.t_setpoint_Signal.emit(readings['TempSetpoint'])
         self.t_ramp_Signal.emit(readings['TempRamp'])
         self.t_ramp_enable_Signal.emit(readings['TempRampEnable'] == 'ON')

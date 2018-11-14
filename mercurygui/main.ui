@@ -50,29 +50,6 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="t1_reading">
-        <property name="minimumSize">
-         <size>
-          <width>60</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>290.000</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLabel" name="t1_unit">
-        <property name="text">
-         <string>K</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="5">
        <widget class="QLabel" name="t2_label">
         <property name="text">
@@ -367,6 +344,22 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item row="1" column="2" colspan="2">
+       <widget class="QLabel" name="t1_reading">
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>290.000 K</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
