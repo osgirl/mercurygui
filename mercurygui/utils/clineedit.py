@@ -5,7 +5,7 @@ from qtpy import QtWidgets
 
 class CLineEdit(QtWidgets.QLineEdit):
     def __init__(self, parent=None):
-        super(CLineEdit, self).__init__(parent)
+        super(self.__class__, self).__init__(parent)
 
     def updateText(self, text):
         """Only update if widget is not in focus / beeing edited."""
