@@ -64,7 +64,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.feed = feed
 
         # create popup Widgets
-        self.connectionDialog = ConnectionDialog(feed.mercury)
+        self.connectionDialog = ConnectionDialog(self, feed.mercury)
         self.readingsWindow = None
 
         # create LED indicator
@@ -137,7 +137,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.readingsAction.triggered.connect(self._on_readings_clicked)
         self.connectAction.triggered.connect(self.feed.connect)
         self.disconnectAction.triggered.connect(self.feed.disconnect)
-        self.updateAddressAction.triggered.connect(self.connectionDialog.show)
+        self.updateAddressAction.triggered.connect(self.connectionDialog.open)
 
         # initially disable menu bar items, will be enabled later individually
         self.connectAction.setEnabled(True)
