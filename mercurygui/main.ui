@@ -398,9 +398,17 @@
      <string>&amp;Edit</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionMinimize"/>
+    <addaction name="actionZoom"/>
+   </widget>
    <addaction name="menu_MercuryiTC"/>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
+   <addaction name="menuWindow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="styleSheet">
@@ -410,40 +418,74 @@ QStatusBar::item {border: 0px solid black };</string>
   </widget>
   <action name="exitAction">
    <property name="text">
-    <string> &amp;Quit MercuryiTC monitor</string>
+    <string>&amp;Quit MercuryiTC monitor</string>
    </property>
    <property name="shortcut">
     <string notr="true"/>
    </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
   </action>
   <action name="modulesAction">
    <property name="text">
-    <string> &amp;Select Modules...</string>
+    <string>&amp;Select Modules...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <action name="readingsAction">
    <property name="text">
-    <string> Readings Overview...</string>
+    <string>Readings Overview...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <action name="connectAction">
    <property name="text">
-    <string> &amp;Connect Mercury</string>
+    <string>&amp;Connect Mercury</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <action name="disconnectAction">
    <property name="text">
-    <string> &amp;Disconnect Mercury</string>
+    <string>&amp;Disconnect Mercury</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <action name="updateAddressAction">
    <property name="text">
-    <string> &amp;Connection Settings...</string>
+    <string>&amp;Connection Settings...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
   <action name="showLogAction">
    <property name="text">
     <string> Show Log Files</string>
+   </property>
+  </action>
+  <action name="actionMinimize">
+   <property name="text">
+    <string>Minimize</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="actionZoom">
+   <property name="text">
+    <string>Zoom</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+Ctrl+Z</string>
    </property>
   </action>
  </widget>
@@ -465,5 +507,38 @@ QStatusBar::item {border: 0px solid black };</string>
   <tabstop>horizontalSlider</tabstop>
  </tabstops>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionMinimize</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>showMinimized()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>274</x>
+     <y>319</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionZoom</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>showMaximized()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>274</x>
+     <y>319</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
