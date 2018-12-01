@@ -41,6 +41,137 @@ MAIN_UI_PATH = pkgr.resource_filename('mercurygui', 'main.ui')
 logger = logging.getLogger(__name__)
 
 
+class MercuryPlotCanvas(FigureCanvas):
+    """
+    Matplotlib FigureCanvas for plotting the temperature, gasflow, and
+    heater level vs time.
+    """
+
+    GREEN = np.array([0, 204, 153]) / 255
+    BLUE = np.array([100, 171, 246]) / 255
+    RED = np.array([221, 61, 53]) / 255
+
+    LIGHT_BLUE = np.append(BLUE, 0.2)  # add alpha value of 0.2
+    LIGHT_RED = np.append(RED, 0.2)  # add alpha value of 0.2
+
+    def __init__(self, parent=None):
+
+        # create figure and set axis labels
+        with mpl.style.context(['default', MPL_STYLE_PATH]):
+            figure = Figure(facecolor='None')
+
+        FigureCanvas.__init__(self, figure)
+
+        with mpl.style.context(['default', MPL_STYLE_PATH]):
+            d = {'height_ratios': [5, 1], 'hspace': 0, 'bottom': 0.07,
+                 'top': 0.97, 'left': 0.08, 'right': 0.95}
+            self.ax1, self.ax2 = self.figure.subplots(2, sharex=True, gridspec_kw=d)
+
+        self.ax1.tick_params(axis='both', which='major', direction='out',
+                             labelcolor='black', color='gray', labelsize=9)
+        self.ax2.tick_params(axis='both', which='major', direction='out',
+                             labelcolor='black', color='gray', labelsize=9)
+
+        self.ax2.spines['top'].set_alpha(0.4)
+
+        self.ax1.xaxis.set_visible(False)
+        self.ax2.xaxis.set_visible(True)
+        self.ax2.yaxis.set_visible(False)
+
+        self.x_pad = 0.7/100
+        self.xLim = [-1 - self.x_pad, 0 + self.x_pad]
+        self.yLim = [0, 300]
+        self.ax1.axis(self.xLim + self.yLim)
+        self.ax2.axis(self.xLim + [-0.08, 1.08])
+
+        self.line_t, = self.ax1.plot(0, 295, '-', linewidth=1.1,
+                                     color=self.GREEN)
+
+        self.fill1 = self.ax2.fill_between([0, ], [0, ],
+                                           facecolor=self.LIGHT_BLUE,
+                                           edgecolor=self.BLUE)
+        self.fill2 = self.ax2.fill_between([0, ], [0, ],
+                                           facecolor=self.LIGHT_RED,
+                                           edgecolor=self.RED)
+
+        self.dpts = 500  # maximum number of data points to plot
+
+        self.setParent(parent)
+        self.setStyleSheet("background-color:transparent;")
+
+        FigureCanvas.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding,
+                                   QtWidgets.QSizePolicy.Expanding)
+
+        FigureCanvas.updateGeometry(self)
+
+    def update_plot(self, x_data, y_data_t, y_data_g, y_data_h, x_min):
+
+        # slice to reduce number of points to self.dpts
+        step_size = max([x_data.shape[0]/self.dpts, 1])
+        step_size = int(step_size)
+        self.CurrentXData = x_data[::step_size]
+        self.CurrentYDataT = y_data_t[::step_size]
+        self.CurrentYDataG = y_data_g[::step_size]
+        self.CurrentYDataH = y_data_h[::step_size]
+
+        # set smallest displayed datapoint to slider value
+        # interpolate if necessary
+        if self.CurrentXData[0] < x_min:
+            self.CurrentXData[0] = x_min
+            self.CurrentYDataT[0] = np.interp(x_min, self.CurrentXData[0:1],
+                                              self.CurrentYDataT[0:1])
+
+        # update axis limits
+        if not self.CurrentXData.size == 0:
+            x_max = 0
+            x_pad = max(self.x_pad * abs(x_min-x_max), 1/10000)  # add padding
+            xLimNew = [x_min - x_pad, x_max + x_pad]
+
+            yLimNew = [floor(self.CurrentYDataT.min())-2.2,
+                       ceil(self.CurrentYDataT.max())+3.2]
+        else:
+            xLimNew, yLimNew = self.xLim, self.yLim
+
+        self.line_t.set_data(self.CurrentXData, self.CurrentYDataT)
+
+        self.fill1.remove()
+        self.fill2.remove()
+
+        self.fill1 = self.ax2.fill_between(self.CurrentXData,
+                                           self.CurrentYDataG, 0,
+                                           facecolor=self.LIGHT_BLUE,
+                                           edgecolor=self.BLUE)
+        self.fill2 = self.ax2.fill_between(self.CurrentXData,
+                                           self.CurrentYDataH, 0,
+                                           facecolor=self.LIGHT_RED,
+                                           edgecolor=self.RED)
+
+        if xLimNew + yLimNew == self.xLim + self.yLim:
+            # redraw only lines
+
+            for ax in self.figure.axes:
+                # redraw plot backgrounds (to remove old lines)
+                ax.draw_artist(ax.patch)
+                # redraw spines
+                for spine in ax.spines.values():
+                    ax.draw_artist(spine)
+
+            self.ax1.draw_artist(self.line_t)
+            self.ax2.draw_artist(self.fill1)
+            self.ax2.draw_artist(self.fill2)
+
+            self.update()
+        else:
+            # redraw the whole plot
+            self.ax1.axis(xLimNew + yLimNew)
+            self.ax2.axis(xLimNew + [-0.08, 1.08])
+            self.draw()
+
+        # cache axis limits
+        self.xLim = xLimNew
+        self.yLim = yLimNew
+
+
 class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     # signals carrying converted data to GUI
@@ -74,33 +205,55 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.led.setChecked(False)
 
         # Set up figure for data plotting
-        self._setup_figure()
+        self.canvas = MercuryPlotCanvas(self)
+        self.gridLayout.addWidget(self.canvas, 5, 0, 1, 10)
+        self.canvas.draw()
+
+        # adapt text edit colors to graoh colors
+        self.t1_reading.setStyleSheet('color:rgb%s' % str(tuple(self.canvas.GREEN*255)))
+        self.gf1_edit.setStyleSheet('color:rgb%s' % str(tuple(self.canvas.BLUE*255)))
+        self.h1_edit.setStyleSheet('color:rgb%s' % str(tuple(self.canvas.RED*255)))
+        self.gf1_unit.setStyleSheet('color:rgb%s' % str(tuple(self.canvas.BLUE*255)))
+        self.h1_unit.setStyleSheet('color:rgb%s' % str(tuple(self.canvas.RED*255)))
+
+        # allow panning by user
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.toolbar.hide()
+        self.toolbar.pan()
+
+        # set up data vectors for plot
+        self.xData = np.array([])
+        self.xDataZeroMin = np.array([])
+        self.yDataT = np.array([])
+        self.yDataG = np.array([])
+        self.yDataH = np.array([])
+
         # restore previous window geometry
         self.restoreGeometry()
         # Connect menu bar actions
-        self._set_up_menubar()
+        self.set_up_menubar()
         # accept only numbers as input for fields
-        self._set_input_validators()
+        self.set_input_validators()
 
         # Check if mercury is connected, connect slots
-        self._display_message('Looking for Mercury at %s...'
-                              % self.feed.visa_address)
+        self.display_message('Looking for Mercury at %s...'
+                             % self.feed.visa_address)
         if self.feed.mercury.connected:
-            self._update_GUI_connection(connected=True)
+            self.update_GUI_connection(connected=True)
 
         # start (stop) updates of GUI when mercury is connected (disconnected)
         # adjust clickable buttons upon connect / disconnect
-        self.feed.connectedSignal.connect(self._update_GUI_connection)
+        self.feed.connectedSignal.connect(self.update_GUI_connection)
 
         # get new readings when available, send as out signals
         self.feed.newReadingsSignal.connect(self.fetch_readings)
         # update plot when new data arrives
-        self.feed.newReadingsSignal.connect(self._update_plot_data)
+        self.feed.newReadingsSignal.connect(self.update_plot_data)
         # check for overheating when new data arrives
         self.feed.newReadingsSignal.connect(self._check_overheat)
 
         # set up logging to file
-        self._setup_logging()
+        self.setup_logging()
 
 # =================== BASIC UI SETUP ==========================================
 
@@ -127,12 +280,12 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         self.exit_()
 
-    def _set_up_menubar(self):
+    def set_up_menubar(self):
         """
         Connects menu bar items to functions, sets the initialactivated status.
         """
         # connect to callbacks
-        self.showLogAction.triggered.connect(self._on_log_clicked)
+        self.showLogAction.triggered.connect(self.on_log_clicked)
         self.exitAction.triggered.connect(self.exit_)
         self.readingsAction.triggered.connect(self._on_readings_clicked)
         self.connectAction.triggered.connect(self.feed.connect)
@@ -145,90 +298,12 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.modulesAction.setEnabled(False)
         self.readingsAction.setEnabled(False)
 
-    def _setup_figure(self):
-        """Sets up figure for temperature plot."""
-
-        # get figure frame to match window color
-        color = QtGui.QPalette().window().color().getRgb()
-        color = [x/255 for x in color]
-
-        # create figure and set axis labels
-        with mpl.style.context(['default', MPL_STYLE_PATH]):
-            self.fig = Figure(facecolor=color)
-
-            d = {'height_ratios': [5, 1]}
-            (self.ax1, self.ax2) = self.fig.subplots(2, sharex=True,
-                                                     gridspec_kw=d)
-            self.fig.subplots_adjust(hspace=0, bottom=0.07, top=0.97,
-                                     left=0.08, right=0.93)
-
-        self.ax1.tick_params(axis='both', which='major', direction='out',
-                             labelcolor='black', color=[0.5, 0.5, 0.5, 1],
-                             labelsize=9)
-        self.ax2.tick_params(axis='both', which='major', direction='out',
-                             labelcolor='black', color=[0.5, 0.5, 0.5, 1],
-                             labelsize=9)
-
-        self.ax2.spines['top'].set_alpha(0.4)
-
-        self.ax1.xaxis.set_visible(False)
-        self.ax2.xaxis.set_visible(True)
-        self.ax2.yaxis.set_visible(False)
-
-        self.x_padding = 0.007
-        self.xLim = [-1 - self.x_padding, 0 + self.x_padding]
-        self.yLim = [0, 300]
-        self.ax1.axis(self.xLim + self.yLim)
-        self.ax2.axis(self.xLim + [-0.08, 1.08])
-
-        # create line object for temperature graph
-        self.lc0 = [0, 0.8, 0.6]  # self.lc0 = [0, 0.64, 0.48]
-        self.lc1 = [100/255, 171/255, 246/255]
-        self.lc2 = [221/255, 61/255, 53/255]
-
-        self.fc1 = [100/255, 171/255, 246/255, 0.2]
-        self.fc2 = [221/255, 61/255, 53/255, 0.2]
-
-        self.line_t, = self.ax1.plot(0, 295, '-', linewidth=1.1,
-                                     color=self.lc0)
-
-        self.fill1 = self.ax2.fill_between([0, ], [0, ], facecolor=self.fc1, edgecolor=self.lc1)
-        self.fill2 = self.ax2.fill_between([0, ], [0, ], facecolor=self.fc2, edgecolor=self.lc2)
-
-        # adapt text edit colors to graoh colors
-        self.t1_reading.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc0]))
-
-        self.gf1_edit.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc1]))
-        self.h1_edit.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc2]))
-
-        self.gf1_unit.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc1]))
-        self.h1_unit.setStyleSheet('color:rgb(%s,%s,%s)' % tuple([i * 255 for i in self.lc2]))
-
-        # create canvas, add to main window, and draw canvas
-        self.canvas = FigureCanvas(self.fig)
-        self.mplvl.addWidget(self.canvas)
-        self.canvas.draw()
-
-        # allow panning by user
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        self.toolbar.hide()
-        self.toolbar.pan()
-
-        # set up data vectors for plot
-        self.xData = np.array([])
-        self.xDataZeroMin = np.array([])
-        self.yDataT = np.array([])
-        self.yDataG = np.array([])
-        self.yDataH = np.array([])
-
-        self.dpts = 500  # maximum number of data points to plot
-
     @QtCore.Slot(bool)
-    def _update_GUI_connection(self, connected):
+    def update_GUI_connection(self, connected):
         if connected:
-            self._display_message('Connection established.')
+            self.display_message('Connection established.')
             logger.info('Connection to MercuryiTC established.')
-            self._connect_slots()
+            self.connect_slots()
             self.connectAction.setEnabled(False)
             self.disconnectAction.setEnabled(True)
             self.modulesAction.setEnabled(True)
@@ -239,10 +314,10 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
             self.show()
 
         elif not connected:
-            self._display_error('Connection lost.')
+            self.display_error('Connection lost.')
             logger.info('Connection to MercuryiTC lost.')
 
-            self._disconnect_slots()
+            self.disconnect_slots()
 
             self.connectAction.setEnabled(True)
             self.disconnectAction.setEnabled(False)
@@ -251,16 +326,16 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
             self.led.setChecked(False)
 
-    def _set_input_validators(self):
+    def set_input_validators(self):
         """ Sets validators for input fields"""
         self.t2_edit.setValidator(QtGui.QDoubleValidator())
         self.r1_edit.setValidator(QtGui.QDoubleValidator())
         self.gf1_edit.setValidator(QtGui.QDoubleValidator())
         self.h1_edit.setValidator(QtGui.QDoubleValidator())
 
-    def _connect_slots(self):
+    def connect_slots(self):
 
-        self._display_message('Connection established.')
+        self.display_message('Connection established.')
 
         self.connectAction.setEnabled(False)
         self.disconnectAction.setEnabled(True)
@@ -298,10 +373,10 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.modulesAction.triggered.connect(self.feed.dialog.show)
 
         # set update_plot to be executed every time the slider position changes
-        self.horizontalSlider.valueChanged.connect(self._update_plot)
+        self.horizontalSlider.valueChanged.connect(self.update_plot)
 
-    def _disconnect_slots(self):
-        self._display_error('Connection lost.')
+    def disconnect_slots(self):
+        self.display_error('Disconnected.')
 
         self.connectAction.setEnabled(True)
         self.disconnectAction.setEnabled(False)
@@ -334,13 +409,13 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.h2_checkbox.clicked.disconnect(self.change_heater_auto)
 
         # disconnect update_plo
-        self.horizontalSlider.valueChanged.disconnect(self._update_plot)
+        self.horizontalSlider.valueChanged.disconnect(self.update_plot)
 
-    def _display_message(self, text):
-        self.statusbar.showMessage('    %s' % text, 5000)
+    def display_message(self, text):
+        self.statusbar.showMessage('%s' % text, 5000)
 
-    def _display_error(self, text):
-        self.statusbar.showMessage('    %s' % text)
+    def display_error(self, text):
+        self.statusbar.showMessage('%s' % text)
 
     @QtCore.Slot(object)
     def fetch_readings(self, readings):
@@ -365,7 +440,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.t_ramp_enable_Signal.emit(readings['TempRampEnable'] == 'ON')
 
     @QtCore.Slot(object)
-    def _update_plot_data(self, readings):
+    def update_plot_data(self, readings):
         # append data for plotting
         self.xData = np.append(self.xData, time.time())
         self.yDataT = np.append(self.yDataT, readings['Temp'])
@@ -381,10 +456,10 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         # convert xData to minutes and set current time to t = 0
         self.xDataZeroMin = (self.xData - max(self.xData))/60
 
-        self._update_plot()
+        self.update_plot()
 
     @QtCore.Slot()
-    def _update_plot(self):
+    def update_plot(self):
 
         # select data to be plotted
         x_slice = self.xDataZeroMin >= -self.horizontalSlider.value()
@@ -393,73 +468,20 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.CurrentYDataG = self.yDataG[x_slice]
         self.CurrentYDataH = self.yDataH[x_slice]
 
-        # slice to reduce number of points to self.dpts
-        step_size = max([self.CurrentXData.shape[0]/self.dpts, 1])
-        step_size = int(step_size)
-        self.CurrentXData = self.CurrentXData[::step_size]
-        self.CurrentYDataT = self.CurrentYDataT[::step_size]
-        self.CurrentYDataG = self.CurrentYDataG[::step_size]
-        self.CurrentYDataH = self.CurrentYDataH[::step_size]
-
-        # set smallest displayed datapoint to slider value
-        if self.xDataZeroMin[0] <= -self.horizontalSlider.value():
-            self.CurrentXData[0] = -self.horizontalSlider.value()
-
-        # update axis limits
+        # determine first plotted datapoint
         if not self.CurrentXData.size == 0:
-            xLim0 = max(-self.horizontalSlider.value(), self.CurrentXData[0])
-            xLim1 = 0
-            x_pad = max(self.x_padding * abs(xLim0-xLim1), 1/10000)  # add 0.7% padding
-            xLimNew = [xLim0 - x_pad, xLim1 + x_pad]
+            x_min = max(-self.horizontalSlider.value(), self.CurrentXData[0])
 
-            yLimNew = [floor(self.CurrentYDataT.min())-2.2,
-                       ceil(self.CurrentYDataT.max())+3.2]
-        else:
-            xLimNew, yLimNew = self.xLim, self.yLim
-
-        self.line_t.set_data(self.CurrentXData, self.CurrentYDataT)
-
-        self.fill1.remove()
-        self.fill2.remove()
-
-        self.fill1 = self.ax2.fill_between(self.CurrentXData,
-                                           self.CurrentYDataG, 0,
-                                           facecolor=self.fc1,
-                                           edgecolor=self.lc1)
-        self.fill2 = self.ax2.fill_between(self.CurrentXData,
-                                           self.CurrentYDataH, 0,
-                                           facecolor=self.fc2,
-                                           edgecolor=self.lc2)
-
-        if xLimNew + yLimNew == self.xLim + self.yLim:
-
-            for ax in self.fig.axes:
-                # redraw plot backgrounds (to remove old lines)
-                ax.draw_artist(ax.patch)
-                # redraw spines
-                for spine in ax.spines.values():
-                    ax.draw_artist(spine)
-
-            self.ax1.draw_artist(self.line_t)
-            self.ax2.draw_artist(self.fill1)
-            self.ax2.draw_artist(self.fill2)
-
-            self.canvas.update()
-        else:
-            self.ax1.axis(xLimNew + yLimNew)
-            self.ax2.axis(xLimNew + [-0.08, 1.08])
-            self.canvas.draw()
+        # update plot
+        self.canvas.update_plot(self.CurrentXData, self.CurrentYDataT,
+                                self.CurrentYDataG, self.CurrentYDataH, x_min)
 
         # update label
         self.timeLabel.setText('Show last %s min' % self.horizontalSlider.value())
 
-        # cash axis limits
-        self.xLim = xLimNew
-        self.yLim = yLimNew
-
 # =================== LOGGING DATA ============================================
 
-    def _setup_logging(self):
+    def setup_logging(self):
         """
         Set up logging of temperature history to files.
         Save temperature history to log file at '~/.CustomXepr/LOG_FILES/'
@@ -519,66 +541,66 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         newT = self.t2_edit.value()
 
         if newT < 310 and newT > 3.5:
-            self._display_message('T_setpoint = %s K' % newT)
+            self.display_message('T_setpoint = %s K' % newT)
             self.feed.control.t_setpoint = newT
         else:
-            self._display_error('Error: Only temperature setpoints between ' +
-                                '3.5 K and 300 K allowed.')
+            self.display_error('Error: Only temperature setpoints between ' +
+                               '3.5 K and 300 K allowed.')
 
     @QtCore.Slot()
     def change_ramp(self):
         self.feed.control.ramp = self.r1_edit.value()
-        self._display_message('Ramp = %s K/min' % self.r1_edit.value())
+        self.display_message('Ramp = %s K/min' % self.r1_edit.value())
 
     @QtCore.Slot(bool)
     def change_ramp_auto(self, checked):
         if checked:
             self.feed.control.ramp_enable = 'ON'
-            self._display_message('Ramp is turned ON')
+            self.display_message('Ramp is turned ON')
         else:
             self.feed.control.ramp_enable = 'OFF'
-            self._display_message('Ramp is turned OFF')
+            self.display_message('Ramp is turned OFF')
 
     @QtCore.Slot()
     def change_flow(self):
         self.feed.control.flow = self.gf1_edit.value()
-        self._display_message('Gas flow  = %s%%' % self.gf1_edit.value())
+        self.display_message('Gas flow  = %s%%' % self.gf1_edit.value())
 
     @QtCore.Slot(bool)
     def change_flow_auto(self, checked):
         if checked:
             self.feed.control.flow_auto = 'ON'
-            self._display_message('Gas flow is automatically controlled.')
+            self.display_message('Gas flow is automatically controlled.')
             self.gf1_edit.setReadOnly(True)
             self.gf1_edit.setEnabled(False)
         else:
             self.feed.control.flow_auto = 'OFF'
-            self._display_message('Gas flow is manually controlled.')
+            self.display_message('Gas flow is manually controlled.')
             self.gf1_edit.setReadOnly(False)
             self.gf1_edit.setEnabled(True)
 
     @QtCore.Slot()
     def change_heater(self):
         self.feed.control.heater = self.h1_edit.value()
-        self._display_message('Heater power  = %s%%' % self.h1_edit.value())
+        self.display_message('Heater power  = %s%%' % self.h1_edit.value())
 
     @QtCore.Slot(bool)
     def change_heater_auto(self, checked):
         if checked:
             self.feed.control.heater_auto = 'ON'
-            self._display_message('Heater is automatically controlled.')
+            self.display_message('Heater is automatically controlled.')
             self.h1_edit.setReadOnly(True)
             self.h1_edit.setEnabled(False)
         else:
             self.feed.control.heater_auto = 'OFF'
-            self._display_message('Heater is manually controlled.')
+            self.display_message('Heater is manually controlled.')
             self.h1_edit.setReadOnly(False)
             self.h1_edit.setEnabled(True)
 
     @QtCore.Slot(object)
     def _check_overheat(self, readings):
         if readings['Temp'] > 310:
-            self._display_error('Over temperature!')
+            self.display_error('Over temperature!')
             self.feed.control.heater_auto = 'OFF'
             self.feed.control.heater = 0
 
@@ -593,7 +615,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.readingsWindow.show()
 
     @QtCore.Slot()
-    def _on_log_clicked(self):
+    def on_log_clicked(self):
         """
         Opens directory with log files with current log file selected.
         """
@@ -606,14 +628,85 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
             subprocess.Popen(['xdg-open', self.loggingPath])
 
 
+class ReadingsTab(QtWidgets.QWidget):
+
+    EXEPT = ['read', 'write', 'query', 'CAL_INT', 'EXCT_TYPES',
+             'TYPES', 'clear_cache']
+
+    def __init__(self, mercury, module):
+        super(self.__class__, self).__init__()
+
+        self.module = module
+        self.mercury = mercury
+
+        self.name = module.nick
+        self.attr = dir(module)
+
+        self.gridLayout = QtWidgets.QGridLayout(self)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setObjectName('gridLayout_%s' % self.name)
+
+        self.label = QtWidgets.QLabel(self)
+        self.label.setObjectName('label_%s' % self.name)
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 2)
+
+        self.comboBox = QtWidgets.QComboBox(self)
+        self.comboBox.setObjectName('comboBox_%s' % self.name)
+        self.gridLayout.addWidget(self.comboBox, 1, 0, 1, 1)
+
+        self.lineEdit = QtWidgets.QLineEdit(self)
+        self.lineEdit.setObjectName('lineEdit_%s' % self.name)
+        self.gridLayout.addWidget(self.lineEdit, 1, 1, 1, 1)
+
+        readings = [x for x in self.attr if not (x.startswith('_') or x in self.EXEPT)]
+        self.comboBox.addItems(readings)
+
+        self.comboBox.currentIndexChanged.connect(self.get_reading)
+        self.comboBox.currentIndexChanged.connect(self.get_alarms)
+
+        self.get_reading()
+        self.get_alarms()
+
+    def get_reading(self):
+        """ Gets readings of selected variable in combobox."""
+
+        reading = getattr(self.module, self.comboBox.currentText())
+        if isinstance(reading, tuple):
+            reading = ''.join(map(str, reading))
+        reading = str(reading)
+        self.lineEdit.setText(reading)
+
+    def get_alarms(self):
+        """Gets alarms of associated module."""
+
+        # get alarms for all modules
+        address = self.module.address.split(':')
+        short_address = address[1]
+        if self.module.nick == 'LOOP':
+            short_address = short_address.split('.')
+            short_address = short_address[0] + '.loop1'
+        try:
+            alarm = self.mercury.alarms[short_address]
+        except KeyError:
+            alarm = '--'
+
+        self.label.setText('Alarms: %s' % alarm)
+
+
 class ReadingsOverview(QtWidgets.QDialog):
+
     def __init__(self, mercury):
         super(self.__class__, self).__init__()
         self.mercury = mercury
         self.setupUi(self)
 
+        # refresh readings every 3 sec
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.get_readings)
+        self.timer.start(3000)
+
     def setupUi(self, Form):
-        Form.setObjectName('ITC Readings Overview')
+        Form.setObjectName('Mercury ITC Readings Overview')
         Form.resize(500, 142)
         self.masterGrid = QtWidgets.QGridLayout(Form)
         self.masterGrid.setObjectName('gridLayout')
@@ -622,95 +715,27 @@ class ReadingsOverview(QtWidgets.QDialog):
         self.tabWidget = QtWidgets.QTabWidget(Form)
         self.tabWidget.setObjectName('tabWidget')
 
-        # get number of modules
-        self.ntabs = len(self.mercury.modules)
-        self.tab = [None]*self.ntabs
-        self.gridLayout = [None]*self.ntabs
-        self.comboBox = [None]*self.ntabs
-        self.lineEdit = [None]*self.ntabs
-        self.label = [None]*self.ntabs
-
         # create a tab with combobox and text box for each module
-        # the tab number i corresonds to the mercury module number
-        for i in range(0, self.ntabs):
-            self.tab[i] = QtWidgets.QWidget()
-            self.tab[i].setObjectName('tab_%s' % str(i))
+        self.readings_tabs = []
 
-            self.gridLayout[i] = QtWidgets.QGridLayout(self.tab[i])
-            self.gridLayout[i].setContentsMargins(0, 0, 0, 0)
-            self.gridLayout[i].setObjectName('gridLayout_%s' % str(i))
-
-            self.label[i] = QtWidgets.QLabel(self.tab[i])
-            self.label[i].setObjectName('label_%s' % str(i))
-            self.gridLayout[i].addWidget(self.label[i], 0, 0, 1, 2)
-
-            self.comboBox[i] = QtWidgets.QComboBox(self.tab[i])
-            self.comboBox[i].setObjectName('comboBox_%s' % str(i))
-            self.gridLayout[i].addWidget(self.comboBox[i], 1, 0, 1, 1)
-
-            self.lineEdit[i] = QtWidgets.QLineEdit(self.tab[i])
-            self.lineEdit[i].setObjectName('lineEdit_%s' % str(i))
-            self.gridLayout[i].addWidget(self.lineEdit[i], 1, 1, 1, 1)
-
-            self.tabWidget.addTab(self.tab[i], self.mercury.modules[i].nick)
-
-        # fill combobox with information, set callbacks for updates
-        for i in range(0, self.ntabs):
-            attr = dir(self.mercury.modules[i])
-            EXEPT = ['read', 'write', 'query', 'CAL_INT', 'EXCT_TYPES',
-                     'TYPES', 'clear_cache']
-            readings = [x for x in attr if not (x.startswith('_') or x in EXEPT)]
-            self.comboBox[i].addItems(readings)
-            self._get_reading(i)
-
-            def callback(x, i=i):
-                """Callback to get readings from selection in combobox_i."""
-                self._get_reading(i)
-
-            self.comboBox[i].currentIndexChanged.connect(callback)
+        for module in self.mercury.modules:
+            new_tab = ReadingsTab(self.mercury, module)
+            self.readings_tabs.append(new_tab)
+            self.tabWidget.addTab(new_tab, module.nick)
 
         # add tab widget to main grid
         self.masterGrid.addWidget(self.tabWidget, 0, 0, 1, 1)
-
-        self.retranslateUi(Form)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
-        # get readings and alarms
-        for i in range(0, self.ntabs):
-            self._get_reading(i)
-            self._get_alarms(i)
-
-    def _get_reading(self, i):
-        """ Gets readings of selected variable in combobox_i."""
-
-        self.getreading = ('self.mercury.modules[%s].%s'
-                           % (i, self.comboBox[i].currentText()))
-        reading = eval(self.getreading)
-        if isinstance(reading, tuple):
-            reading = ''.join(map(str, reading))
-        reading = str(reading)
-        self.lineEdit[i].setText(reading)
-
-    def _get_alarms(self, i):
-
-        # get alarms for all modules
-        address = self.mercury.modules[i].address.split(':')
-        short_address = address[1]
-        if self.mercury.modules[i].nick == 'LOOP':
-            short_address = short_address.split('.')
-            short_address = short_address[0] + '.loop1'
-        try:
-            alarm = self.mercury.alarms[short_address]
-        except KeyError:
-            alarm = '--'
-
-        self.label[i].setText('Alarms: %s' % alarm)
-
-    def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate('ITC Readings Overview',
-                                       'ITC Readings Overview'))
+    def get_readings(self):
+        """
+        Getting alarams of selected tab and update its selected reading, only
+        if QWidget is not hidden.
+        """
+        if self.isVisible():
+            self.tabWidget.currentWidget().get_reading()
+            self.tabWidget.currentWidget().get_alarms()
 
 
 def run():

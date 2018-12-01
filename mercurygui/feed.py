@@ -113,9 +113,10 @@ class MercuryFeed(QtWidgets.QWidget):
             self.worker.terminate = True
             self.thread.terminate()
             self.thread.wait()
-            self.connectedSignal.emit(False)
 
-        self.mercury.disconnect()
+        if self.mercury.connected:
+            self.mercury.disconnect()
+            self.connectedSignal.emit(False)
         self.deleteLater()
 
 # CODE TO INTERACT WITH MERCURYITC
