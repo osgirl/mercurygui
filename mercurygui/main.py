@@ -123,9 +123,8 @@ class MercuryPlotCanvas(FigureCanvas):
 
         # update axis limits
         if not self.CurrentXData.size == 0:
-            x_max = 0
-            x_pad = max(self.x_pad * abs(x_min-x_max), 1/10000)  # add padding
-            xLimNew = [x_min - x_pad, x_max + x_pad]
+            x_pad_abs = max(self.x_pad * abs(x_min), 1/10000)  # add padding
+            xLimNew = [x_min - x_pad_abs, x_pad_abs]
 
             yLimNew = [floor(self.CurrentYDataT.min())-2.2,
                        ceil(self.CurrentYDataT.max())+3.2]
