@@ -94,7 +94,7 @@ class MercuryPlotCanvas(FigureCanvas):
                                            facecolor=self.LIGHT_RED,
                                            edgecolor=self.RED)
 
-        self.dpts = 500  # maximum number of data points to plot
+        self.dpts = 1000  # maximum number of data points to plot
 
         self.setParent(parent)
         self.setStyleSheet("background-color:transparent;")
@@ -205,7 +205,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
         # Set up figure for data plotting
         self.canvas = MercuryPlotCanvas(self)
-        self.gridLayout.addWidget(self.canvas, 5, 0, 1, 10)
+        self.gridLayoutCanvas.addWidget(self.canvas)
         self.canvas.draw()
 
         # adapt text edit colors to graoh colors
@@ -745,7 +745,7 @@ def run():
     MERCURY_ADDRESS = CONF.get('Connection', 'VISA_ADDRESS')
     VISA_LIBRARY = CONF.get('Connection', 'VISA_LIBRARY')
 
-    mercury = MercuryITC(MERCURY_ADDRESS, VISA_LIBRARY)
+    mercury = MercuryITC('', VISA_LIBRARY)
 
     app = QtWidgets.QApplication(sys.argv)
     app.aboutToQuit.connect(app.deleteLater)
