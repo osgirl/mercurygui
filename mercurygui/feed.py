@@ -248,11 +248,12 @@ class DataCollectionWorker(QtCore.QObject):
                     self.getReadings()
                     # sleep untill next scheduled refresh
                     QtCore.QThread.msleep(int(self.refresh*1000))
-                except:
+                except Exception:
                     # emit signal if connection is lost
                     self.connectedSignal.emit(False)
                     # stop worker thread
                     self.running = False
+                    self.mercury.connected = False
                     logger.warning('Connection to MercuryiTC lost.')
             elif not self.running:
                 QtCore.QThread.msleep(int(self.refresh*1000))
