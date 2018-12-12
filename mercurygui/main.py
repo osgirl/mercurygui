@@ -745,7 +745,7 @@ def run():
     MERCURY_ADDRESS = CONF.get('Connection', 'VISA_ADDRESS')
     VISA_LIBRARY = CONF.get('Connection', 'VISA_LIBRARY')
 
-    mercury = MercuryITC('', VISA_LIBRARY)
+    mercury = MercuryITC(MERCURY_ADDRESS, VISA_LIBRARY)
 
     app = QtWidgets.QApplication(sys.argv)
     app.aboutToQuit.connect(app.deleteLater)

@@ -20,7 +20,7 @@ from mercurygui.config.main import CONF
 logger = logging.getLogger(__name__)
 
 
-class MercuryFeed(QtWidgets.QWidget):
+class MercuryFeed(QtCore.QObject):
     """
     Povides a data feed from the MercuryiTC with the most important readings
     of the gasflow, heater, temperature sensor and control loop modules. This
@@ -28,23 +28,24 @@ class MercuryFeed(QtWidgets.QWidget):
     communication with the mercury.
 
     New data from the selected modules is emitted by the newReadingsSignal in
-    form of a dictionary with entries:
+    as a dictionary `readings` with entries:
 
-        readings['HeaterVolt']  -- current heater voltage in V
-        readings['HeaterAuto']  -- automatic or manual control of heater
-        readings['HeaterPercent'] -- heater percentage of maximum
+        # heater data
+        'HeaterVolt'       # current heater voltage in V (float)
+        'HeaterAuto'       # automatic or manual control of heater (bool)
+        'HeaterPercent'    # heater percentage of maximum (float)
 
-        # read gas flow data
-        readings['FlowAuto'] -- automatic or manual control of needle valve
-        readings['FlowPercent'] -- actual needle valve opening in percent
-        readings['FlowMin'] -- needle valve minimum allowed opening
-        readings['FlowSetpoint'] -- needle valve opening setpoint in percent
+        # gas flow data
+        'FlowAuto'         # automatic or manual control of needle valve (bool)
+        'FlowPercent'      # actual needle valve opening in percent (float)
+        'FlowMin'          # needle valve minimum allowed opening (float)
+        'FlowSetpoint'     # needle valve opening setpoint in percent (float)
 
-        # read temperature data
-        readings['Temp'] -- actual temperature in K
-        readings['TempSetpoint'] -- temperature setpoint in K
-        readings['TempRamp']  -- temperature ramping speed in K/min
-        readings['TempRampEnable']  -- ramping enabled or disabled
+        # temperature data
+        'Temp'             # actual temperature in K (float)
+        'TempSetpoint'     # temperature setpoint in K (float)
+        'TempRamp'         # temperature ramping speed in K/min (float)
+        'TempRampEnable'   # ramping enabled or disabled (bool)
 
     You can recieve the emitted readings as follows:
 
