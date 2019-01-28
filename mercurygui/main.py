@@ -496,7 +496,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
             os.makedirs(self.logging_path)
         # set logging file path
         self.log_file = os.path.join(self.logging_path, 'temperature_log ' +
-                                     time.strftime("%Y-%m-%d_%H-%M-%S"))
+                                     time.strftime("%Y-%m-%d_%H-%M-%S") + '.txt')
 
         t_save = 10  # time interval to save temperature data in min
         self.new_file = True  # create new log file for every new start
@@ -513,10 +513,10 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
             filepath = QtWidgets.QFileDialog.getSaveFileName(caption=text)
             filepath = filepath[0]
 
-        if filepath[-4:] is not '.txt':
-            filepath.join('.txt')
+        if not filepath.endswith('.txt'):
+            filepath += '.txt'
 
-        title = '# temperature trace, saved on '+time.strftime('%d/%m/%Y')+'\n'
+        title = 'temperature trace, saved on ' + time.strftime('%d/%m/%Y') + '\n'
         heater_vlim = self.feed.heater.vlim
         header = '\t'.join(['Time (sec)', 'Temperature (K)',
                             'Heater (%% of %sV)' % heater_vlim, 'Gas flow (%)'])
@@ -527,8 +527,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
                                       self.ydata_gflw[:, np.newaxis]), axis=1)
 
         # noinspection PyTypeChecker
-        np.savetxt(filepath, data_matrix, fmt='%.5E', delimiter='\t',
-                   newline='\n', header=header, comments=title)
+        np.savetxt(filepath, data_matrix, delimiter='\t', header=title+header)
 
     def log_temperature_data(self):
         # save temperature data to log file
