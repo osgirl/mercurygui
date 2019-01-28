@@ -22,53 +22,55 @@ logger = logging.getLogger(__name__)
 
 class MercuryFeed(QtCore.QObject):
     """
-    Povides a data feed from the MercuryiTC with the most important readings
-    of the gasflow, heater, temperature sensor and control loop modules. This
+    Provides a data feed from the MercuryiTC with the most important readings
+    of the gas flow, heater, temperature sensor and control loop modules. This
     enables other programs to get readings from the feed and reduced direct
     communication with the mercury.
 
-    New data from the selected modules is emitted by the newReadingsSignal in
-    as a dictionary `readings` with entries:
+    New data from the selected modules is emitted by the `new_readings_signal`
+    as a dictionary with entries:
 
-        # heater data
-        'HeaterVolt'       # current heater voltage in V (float)
-        'HeaterAuto'       # automatic or manual control of heater (bool)
-        'HeaterPercent'    # heater percentage of maximum (float)
+        Heater data:
+            'HeaterVolt'       # current heater voltage in V (float)
+            'HeaterAuto'       # automatic or manual control of heater (bool)
+            'HeaterPercent'    # heater percentage of maximum (float)
 
-        # gas flow data
-        'FlowAuto'         # automatic or manual control of needle valve (bool)
-        'FlowPercent'      # actual needle valve opening in percent (float)
-        'FlowMin'          # needle valve minimum allowed opening (float)
-        'FlowSetpoint'     # needle valve opening setpoint in percent (float)
+        Gas flow data:
+            'FlowAuto'         # automatic or manual control of needle valve (bool)
+            'FlowPercent'      # actual needle valve opening in percent (float)
+            'FlowMin'          # needle valve minimum allowed opening (float)
+            'FlowSetpoint'     # needle valve opening setpoint in percent (float)
 
-        # temperature data
-        'Temp'             # actual temperature in K (float)
-        'TempSetpoint'     # temperature setpoint in K (float)
-        'TempRamp'         # temperature ramping speed in K/min (float)
-        'TempRampEnable'   # ramping enabled or disabled (bool)
+        Temperature data:
+            'Temp'             # actual temperature in K (float)
+            'TempSetpoint'     # temperature setpoint in K (float)
+            'TempRamp'         # temperature ramp speed in K/min (float)
+            'TempRampEnable'   # ramp enabled or disabled (bool)
 
-    You can recieve the emitted readings as follows:
+    You can receive the emitted readings as follows:
 
-        >>> feed = MercuryFeed('VISA_addess')
-        >>> feed.newReadingsSignal.connect(my_function)
+        >>> from mercuryitc import MercuryITC
+        >>> from mercurygui import MercuryFeed
+        >>> # connect to mercury and start data feed
+        >>> m = MercuryITC('VISA_ADDRESS')
+        >>> feed = MercuryFeed(m)
+        >>> # example function that prints temperature reading
+        >>> def print_temperature(readings):
+        ...     print('T = %s Kelvin' % readings['Temp'])
+        >>> # connect signal to function
+        >>> connection = feed.new_readings_signal.connect(print_temperature)
 
-    and 'my_function' will be excecuted with the emitted readings dictionary as
-    argument everytime a new signal is emitted.
+    `print_temperature` will then be executed with the emitted readings
+    dictionary as argument every time a new signal is emitted.
 
-    MercuryFeed will also handle maintining the connection for you: it will
+    `MercuryFeed` will also handle maintaining the connection for you: it will
     periodically try to find the MercuryiTC if not connected, and emit warnings
-    when it looses an established connection. The Mercury driver itself can be
-    accessed directly as well, for example to send new settings to the Mercury:
-
-        >>> mercury = feed.mercury
-        >>> mercury.control.t_setpoint = 290  # new setpoint of 290 K
-
+    when it looses an established connection.
     """
 
-    # status signals
-    newReadingsSignal = QtCore.Signal(object)
-    notifySignal = QtCore.Signal(str)
-    connectedSignal = QtCore.Signal(bool)
+    new_readings_signal = QtCore.Signal(dict)
+    notify_signal = QtCore.Signal(str)
+    connected_signal = QtCore.Signal(bool)
 
     def __init__(self, mercury, refresh=1):
         super(self.__class__, self).__init__()
@@ -84,7 +86,7 @@ class MercuryFeed(QtCore.QObject):
 
         if self.mercury.connected:
             self.start_worker()
-            self.connectedSignal.emit(True)
+            self.connected_signal.emit(True)
 
     # BASE FUNCTIONALITY CODE
 
@@ -94,19 +96,18 @@ class MercuryFeed(QtCore.QObject):
             self.worker.running = False
 
         # disconnect mercury
-        self.connectedSignal.emit(False)
+        self.connected_signal.emit(False)
         self.mercury.disconnect()
 
     def connect(self):
         # connect to mercury
         if not self.mercury.connected:
             self.mercury.connect()
-        if not self.mercury.connected:
-            return
 
-        # start / resume worker
-        self.start_worker()
-        self.connectedSignal.emit(True)
+        if self.mercury.connected:
+            # start / resume worker
+            self.start_worker()
+            self.connected_signal.emit(True)
 
     def exit_(self):
         if self.worker:
@@ -117,7 +118,7 @@ class MercuryFeed(QtCore.QObject):
 
         if self.mercury.connected:
             self.mercury.disconnect()
-            self.connectedSignal.emit(False)
+            self.connected_signal.emit(False)
         self.deleteLater()
 
 # CODE TO INTERACT WITH MERCURYITC
@@ -130,33 +131,33 @@ class MercuryFeed(QtCore.QObject):
             self.worker.running = True
         else:
             self.dialog = SensorDialog(self.mercury.modules)
-            self.dialog.accepted.connect(self.updateModules)
+            self.dialog.accepted.connect(self.update_modules)
 
             # start data collection thread
             self.thread = QtCore.QThread()
             self.worker = DataCollectionWorker(self.refresh, self.mercury, self.dialog.modNumbers)
             self.worker.moveToThread(self.thread)
-            self.worker.readingsSignal.connect(self._getData)
-            self.worker.connectedSignal.connect(self.connectedSignal.emit)
+            self.worker.readings_signal.connect(self._get_data)
+            self.worker.connected_signal.connect(self.connected_signal.emit)
             self.thread.started.connect(self.worker.run)
-            self.updateModules(self.dialog.modNumbers)
+            self.update_modules(self.dialog.modNumbers)
             self.thread.start()
 
-    def updateModules(self, modNumbers):
+    def update_modules(self, mod_numbers):
         """
         Updates module list after the new modules have been selected in dialog.
         """
-        self.gasflow = self.mercury.modules[modNumbers['gasflow']]
-        self.heater = self.mercury.modules[modNumbers['heater']]
-        self.temperature = self.mercury.modules[modNumbers['temperature']]
-        self.control = self.mercury.modules[modNumbers['temperature']+1]
+        self.gasflow = self.mercury.modules[mod_numbers['gasflow']]
+        self.heater = self.mercury.modules[mod_numbers['heater']]
+        self.temperature = self.mercury.modules[mod_numbers['temperature']]
+        self.control = self.mercury.modules[mod_numbers['temperature'] + 1]
 
         # send new modules to thread if running
-        self.worker.updateModules(modNumbers)
+        self.worker.update_modules(mod_numbers)
 
-    def _getData(self, readingsFromThread):
-        self.readings = readingsFromThread
-        self.newReadingsSignal.emit(self.readings)
+    def _get_data(self, readings_from_thread):
+        self.readings = readings_from_thread
+        self.new_readings_signal.emit(self.readings)
 
 
 class SensorDialog(QtWidgets.QDialog):
@@ -166,12 +167,12 @@ class SensorDialog(QtWidgets.QDialog):
 
     accepted = QtCore.Signal(object)
 
-    def __init__(self, mercuryModules):
+    def __init__(self, mercury_modules):
         super(self.__class__, self).__init__()
         uic.loadUi(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                 'module_dialog.ui'), self)
 
-        num = len(mercuryModules)
+        num = len(mercury_modules)
         temp_modules_nick = []
         self.temp_modules = []
         gas_modules_nick = []
@@ -182,9 +183,9 @@ class SensorDialog(QtWidgets.QDialog):
         self.modNumbers = {}
 
         for i in range(num-1, -1, -1):
-            address = mercuryModules[i].address
+            address = mercury_modules[i].address
             type_ = address.split(':')[-1]
-            nick = mercuryModules[i].nick
+            nick = mercury_modules[i].nick
             if type_ == 'AUX':
                 gas_modules_nick.append(nick)
                 self.gas_modules.append(i)
@@ -209,9 +210,9 @@ class SensorDialog(QtWidgets.QDialog):
         self.modNumbers['gasflow'] = self.gas_modules[self.comboBox_2.currentIndex()]
         self.modNumbers['heater'] = self.heat_modules[self.comboBox_3.currentIndex()]
 
-        self.buttonBox.accepted.connect(self._onAccept)
+        self.buttonBox.accepted.connect(self._on_accept)
 
-    def _onAccept(self):
+    def _on_accept(self):
         self.modNumbers['temperature'] = self.temp_modules[self.comboBox.currentIndex()]
         self.modNumbers['gasflow'] = self.gas_modules[self.comboBox_2.currentIndex()]
         self.modNumbers['heater'] = self.heat_modules[self.comboBox_3.currentIndex()]
@@ -226,17 +227,17 @@ class SensorDialog(QtWidgets.QDialog):
 
 class DataCollectionWorker(QtCore.QObject):
 
-    readingsSignal = QtCore.Signal(object)
-    connectedSignal = QtCore.Signal(bool)
+    readings_signal = QtCore.Signal(object)
+    connected_signal = QtCore.Signal(bool)
 
-    def __init__(self, refresh, mercury, modNumbers):
+    def __init__(self, refresh, mercury, mod_numbers):
         QtCore.QObject.__init__(self)
         self.refresh = refresh
         self.mercury = mercury
-        self.modNumbers = modNumbers
+        self.mod_numbers = mod_numbers
 
         self.readings = {}
-        self.updateModules(self.modNumbers)
+        self.update_modules(self.mod_numbers)
 
         self.running = True
         self.terminate = False
@@ -246,12 +247,12 @@ class DataCollectionWorker(QtCore.QObject):
             if self.running:
                 try:
                     # proceed with full update
-                    self.getReadings()
-                    # sleep untill next scheduled refresh
-                    QtCore.QThread.msleep(int(self.refresh*1000))
+                    self.get_readings()
+                    # sleep until next scheduled refresh
+                    QtCore.QThread.sleep(int(self.refresh))
                 except Exception:
                     # emit signal if connection is lost
-                    self.connectedSignal.emit(False)
+                    self.connected_signal.emit(False)
                     # stop worker thread
                     self.running = False
                     self.mercury.connected = False
@@ -260,9 +261,8 @@ class DataCollectionWorker(QtCore.QObject):
                 QtCore.QThread.msleep(int(self.refresh*1000))
                 if self.mercury.connected:
                     self.running = True
-                    self.connectedSignal.emit(True)
 
-    def getReadings(self):
+    def get_readings(self):
         # read heater data
         self.readings['HeaterVolt'] = self.heater.volt[0]
         self.readings['HeaterAuto'] = self.control.heater_auto
@@ -280,16 +280,16 @@ class DataCollectionWorker(QtCore.QObject):
         self.readings['TempRamp'] = self.control.ramp
         self.readings['TempRampEnable'] = self.control.ramp_enable
 
-        self.readingsSignal.emit(self.readings)
+        self.readings_signal.emit(self.readings)
 
-    def updateModules(self, modNumbers):
+    def update_modules(self, mod_numbers):
         """
         Updates module list after the new modules have been selected in dialog.
         """
-        self.gasflow = self.mercury.modules[modNumbers['gasflow']]
-        self.heater = self.mercury.modules[modNumbers['heater']]
-        self.temperature = self.mercury.modules[modNumbers['temperature']]
-        self.control = self.mercury.modules[modNumbers['temperature']+1]
+        self.gasflow = self.mercury.modules[mod_numbers['gasflow']]
+        self.heater = self.mercury.modules[mod_numbers['heater']]
+        self.temperature = self.mercury.modules[mod_numbers['temperature']]
+        self.control = self.mercury.modules[mod_numbers['temperature'] + 1]
 
 
 # if we're running the file directly and not importing it
@@ -301,7 +301,7 @@ if __name__ == '__main__':
     # otherwise create a new one
     app = QtWidgets.QApplication(sys.argv)
 
-    mercury = MercuryITC(CONF.get('Connection', 'VISA_ADDRESS'))
-    feed = MercuryFeed(mercury)
+    m = MercuryITC(CONF.get('Connection', 'VISA_ADDRESS'))
+    feed = MercuryFeed(m)
 
     sys.exit(app.exec_())
