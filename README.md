@@ -5,6 +5,7 @@ The user interface for the cryostat plots historic temperature readings going ba
 
 
 ![Screenshot of the user interface](/screenshots/MercuryGUI.png)
+<img src="/screenshots/MercuryGUI.png" alt="Screenshot of the user interface" width="500"/>
 
 ## System requirements
 *Required*:
