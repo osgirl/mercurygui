@@ -26,6 +26,7 @@ setup(
         'QtPy',
         'mercuryitc',
         'matplotlib',
+        'numpy',
         'pyvisa',
         'repr',
     ],

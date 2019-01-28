@@ -103,3 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 .DS_Store
+.idea/dictionaries/samschott.xml
+.idea/encodings.xml
+*.xml
+.idea/mercurygui.iml
