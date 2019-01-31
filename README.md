@@ -4,7 +4,7 @@ mercurygui provides a higher-level worker thread which regularly queries the Mer
 The user interface for the cryostat plots historic temperature readings going back up to 24 h and provides access to relevant temperature control settings such as gas flow, heater power, and ramping speed while lower-level configurations such as calibration tables must be changed programatically.
 
 
-<img src="/screenshots/MercuryGUI.png" alt="Screenshot of the user interface" width="500"/>
+<img src="https://raw.githubusercontent.com/OE-FET/keithleygui/master/screenshots/KeithleyGUI.png" alt="Screenshot of the user interface" width="500"/>
 
 ## System requirements
 *Required*:

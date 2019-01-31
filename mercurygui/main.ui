@@ -481,7 +481,7 @@ QStatusBar::item {border: 0px solid black };</string>
   </action>
   <action name="showLogAction">
    <property name="text">
-    <string> Show Log Files</string>
+    <string> Show Log Files...</string>
    </property>
   </action>
   <action name="actionMinimize">
