@@ -300,7 +300,6 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
     def update_gui_connection(self, connected):
         if connected:
             self.display_message('Connection established.')
-            logger.info('Connection to MercuryiTC established.')
             self.connect_slots()
             self.connectAction.setEnabled(False)
             self.disconnectAction.setEnabled(True)
