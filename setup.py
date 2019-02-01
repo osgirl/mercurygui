@@ -2,13 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='mercurygui',
-    version='0.1.0',
+    version='1.0.0',
     description="",
     author='Sam Schott',
     author_email='ss2151@cam.ac.uk',
     url='https://github.com/oe-fet/mercurygui.git',
     license='MIT',
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     package_data={
         'mercurygui': ['*.ui', '*.mplstyle'],
