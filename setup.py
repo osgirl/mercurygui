@@ -23,13 +23,13 @@ setup(
         ]
     },
     install_requires=[
-        'setuptools',
-        'QtPy',
         'mercuryitc',
         'matplotlib',
         'numpy',
         'pyvisa',
+        'qtpy',
         'repr',
+        'setuptools',
     ],
     zip_safe=False,
     keywords='mercurygui',

@@ -1,3 +1,5 @@
+[![PyPi Release](https://img.shields.io/pypi/v/mercurygui.svg?style=flat)](https://img.shields.io/pypi/v/mercurygui.svg?style=flat)
+
 # mercurygui
 mercurygui provides a higher-level worker thread which regularly queries the MercuryiTC for its sensor readings and provides a live stream of this data to other parts of the software. This prevents individual functions from querying the MercuryiTC directly and causing unnecessary overhead.
 
