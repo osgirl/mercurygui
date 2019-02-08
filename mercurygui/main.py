@@ -106,7 +106,7 @@ class MercuryPlotCanvas(FigureCanvas):
 
     def update_plot(self, x_data, y_data_t, y_data_g, y_data_h, x_min):
 
-        # slice to reduce number of points to `self.dpts`
+        # slice to reduce number of points to `dpts`
         step_size = max([x_data.shape[0]/self.dpts, 1])
         step_size = int(step_size)
         self.current_xdata = x_data[::step_size]
@@ -172,20 +172,6 @@ class MercuryPlotCanvas(FigureCanvas):
 
 
 class MercuryMonitorApp(QtWidgets.QMainWindow):
-
-    # signals carrying converted data to GUI
-    heater_volt_signal = QtCore.Signal(str)
-    heater_percent_signal = QtCore.Signal(float)
-    heater_auto_signal = QtCore.Signal(bool)
-
-    flow_auto_signal = QtCore.Signal(bool)
-    flow_signal = QtCore.Signal(float)
-    flow_min_signal = QtCore.Signal(str)
-
-    t_signal = QtCore.Signal(str)
-    t_setpoint_signal = QtCore.Signal(float)
-    t_ramp_signal = QtCore.Signal(float)
-    t_ramp_enable_signal = QtCore.Signal(bool)
 
     def __init__(self, feed):
         super(self.__class__, self).__init__()
@@ -280,12 +266,12 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     def set_up_menubar(self):
         """
-        Connects menu bar items to functions, sets the initialactivated status.
+        Connects menu bar items to callbacks, sets their initial activation.
         """
         # connect to callbacks
         self.showLogAction.triggered.connect(self.on_log_clicked)
         self.exitAction.triggered.connect(self.exit_)
-        self.readingsAction.triggered.connect(self._on_readings_clicked)
+        self.readingsAction.triggered.connect(self.on_readings_clicked)
         self.connectAction.triggered.connect(self.feed.connect)
         self.disconnectAction.triggered.connect(self.feed.disconnect)
         self.updateAddressAction.triggered.connect(self.connection_dialog.open)
@@ -300,28 +286,48 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
     def update_gui_connection(self, connected):
         if connected:
             self.display_message('Connection established.')
-            self.connect_slots()
+            self.led.setChecked(True)
+
+            # enable / disable menu bar items
             self.connectAction.setEnabled(False)
             self.disconnectAction.setEnabled(True)
             self.modulesAction.setEnabled(True)
             self.readingsAction.setEnabled(True)
 
-            self.led.setChecked(True)
+            # connect user input to change mercury settings
+            self.t2_edit.returnPressed.connect(self.change_t_setpoint)
+            self.r1_edit.returnPressed.connect(self.change_ramp)
+            self.r2_checkbox.clicked.connect(self.change_ramp_auto)
+            self.gf1_edit.returnPressed.connect(self.change_flow)
+            self.gf2_checkbox.clicked.connect(self.change_flow_auto)
+            self.h1_edit.returnPressed.connect(self.change_heater)
+            self.h2_checkbox.clicked.connect(self.change_heater_auto)
 
-            self.show()
+            # set update_plot to be executed every time the slider position changes
+            self.horizontalSlider.valueChanged.connect(self.update_plot)
 
         elif not connected:
             self.display_error('Connection lost.')
             logger.info('Connection to MercuryiTC lost.')
+            self.led.setChecked(False)
 
-            self.disconnect_slots()
-
+            # enable / disable menu bar items
             self.connectAction.setEnabled(True)
             self.disconnectAction.setEnabled(False)
             self.modulesAction.setEnabled(False)
             self.readingsAction.setEnabled(False)
 
-            self.led.setChecked(False)
+            # disconnect user input from mercury
+            self.t2_edit.returnPressed.disconnect(self.change_t_setpoint)
+            self.r1_edit.returnPressed.disconnect(self.change_ramp)
+            self.r2_checkbox.clicked.disconnect(self.change_ramp_auto)
+            self.gf1_edit.returnPressed.disconnect(self.change_flow)
+            self.gf2_checkbox.clicked.disconnect(self.change_flow_auto)
+            self.h1_edit.returnPressed.disconnect(self.change_heater)
+            self.h2_checkbox.clicked.disconnect(self.change_heater_auto)
+
+            # disconnect update_plot
+            self.horizontalSlider.valueChanged.disconnect(self.update_plot)
 
     def set_input_validators(self):
         """ Sets validators for input fields"""
@@ -329,84 +335,6 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.r1_edit.setValidator(QtGui.QDoubleValidator())
         self.gf1_edit.setValidator(QtGui.QDoubleValidator())
         self.h1_edit.setValidator(QtGui.QDoubleValidator())
-
-    def connect_slots(self):
-
-        self.display_message('Connection established.')
-
-        self.connectAction.setEnabled(False)
-        self.disconnectAction.setEnabled(True)
-        self.modulesAction.setEnabled(True)
-        self.readingsAction.setEnabled(True)
-
-        # connect GUI slots to emitted data from worker
-        self.heater_volt_signal.connect(self.h1_label.setText)
-        self.heater_auto_signal.connect(self.h2_checkbox.setChecked)
-        self.heater_auto_signal.connect(lambda b: self.h1_edit.setEnabled(not b))
-        self.heater_auto_signal.connect(self.h1_edit.setReadOnly)
-        self.heater_percent_signal.connect(self.h1_edit.updateValue)
-
-        self.flow_auto_signal.connect(self.gf2_checkbox.setChecked)
-        self.flow_auto_signal.connect(lambda b: self.gf1_edit.setEnabled(not b))
-        self.flow_auto_signal.connect(self.gf1_edit.setReadOnly)
-        self.flow_signal.connect(self.gf1_edit.updateValue)
-        self.flow_min_signal.connect(self.gf1_label.setText)
-
-        self.t_signal.connect(self.t1_reading.setText)
-        self.t_setpoint_signal.connect(self.t2_edit.updateValue)
-        self.t_ramp_signal.connect(self.r1_edit.updateValue)
-        self.t_ramp_enable_signal.connect(self.r2_checkbox.setChecked)
-
-        # connect user input to change mercury settings
-        self.t2_edit.returnPressed.connect(self.change_t_setpoint)
-        self.r1_edit.returnPressed.connect(self.change_ramp)
-        self.r2_checkbox.clicked.connect(self.change_ramp_auto)
-        self.gf1_edit.returnPressed.connect(self.change_flow)
-        self.gf2_checkbox.clicked.connect(self.change_flow_auto)
-        self.h1_edit.returnPressed.connect(self.change_heater)
-        self.h2_checkbox.clicked.connect(self.change_heater_auto)
-
-        # connect menu bar item to show module dialog if mercury is running
-        self.modulesAction.triggered.connect(self.feed.dialog.show)
-
-        # set update_plot to be executed every time the slider position changes
-        self.horizontalSlider.valueChanged.connect(self.update_plot)
-
-    def disconnect_slots(self):
-        self.display_error('Disconnected.')
-
-        self.connectAction.setEnabled(True)
-        self.disconnectAction.setEnabled(False)
-        self.modulesAction.setEnabled(False)
-        self.readingsAction.setEnabled(False)
-
-        # disconnect GUI slots from worker
-        self.heater_volt_signal.disconnect(self.h1_label.setText)
-        self.heater_auto_signal.disconnect(self.h2_checkbox.setChecked)
-        self.heater_auto_signal.disconnect(self.h1_edit.setReadOnly)
-        self.heater_percent_signal.disconnect(self.h1_edit.updateValue)
-
-        self.flow_auto_signal.disconnect(self.gf2_checkbox.setChecked)
-        self.flow_auto_signal.disconnect(self.gf1_edit.setReadOnly)
-        self.flow_signal.disconnect(self.gf1_edit.updateValue)
-        self.flow_min_signal.disconnect(self.gf1_label.setText)
-
-        self.t_signal.disconnect(self.t1_reading.setText)
-        self.t_setpoint_signal.disconnect(self.t2_edit.updateValue)
-        self.t_ramp_signal.disconnect(self.r1_edit.updateValue)
-        self.t_ramp_enable_signal.disconnect(self.r2_checkbox.setChecked)
-
-        # disconnect user input from mercury
-        self.t2_edit.returnPressed.disconnect(self.change_t_setpoint)
-        self.r1_edit.returnPressed.disconnect(self.change_ramp)
-        self.r2_checkbox.clicked.disconnect(self.change_ramp_auto)
-        self.gf1_edit.returnPressed.disconnect(self.change_flow)
-        self.gf2_checkbox.clicked.disconnect(self.change_flow_auto)
-        self.h1_edit.returnPressed.disconnect(self.change_heater)
-        self.h2_checkbox.clicked.disconnect(self.change_heater_auto)
-
-        # disconnect update_plo
-        self.horizontalSlider.valueChanged.disconnect(self.update_plot)
 
     def display_message(self, text):
         self.statusbar.showMessage('%s' % text, 5000)
@@ -417,24 +345,33 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
     @QtCore.Slot(object)
     def fetch_readings(self, readings):
         """
-        Parses readings for the MercuryMonitorApp and emits resulting
-        strings as signals.
+        Parses readings for the MercuryMonitorApp and updates UI accordingly
         """
-        # emit heater signals
-        self.heater_volt_signal.emit('Heater, %s V:' % readings['HeaterVolt'])
-        self.heater_auto_signal.emit(readings['HeaterAuto'] == 'ON')
-        self.heater_percent_signal.emit(readings['HeaterPercent'])
+        # heater signals
+        self.h1_label.setText('Heater, %s V:' % readings['HeaterVolt'])
+        self.h1_edit.updateValue(readings['HeaterPercent'])
 
-        # emit gas flow signals
-        self.flow_auto_signal.emit(readings['FlowAuto'] == 'ON')
-        self.flow_signal.emit(readings['FlowPercent'])
-        self.flow_min_signal.emit('Gas flow (min = %s%%):' % readings['FlowMin'])
+        is_heater_auto = readings['HeaterAuto'] == 'ON'
+        self.h1_edit.setReadOnly(is_heater_auto)
+        self.h1_edit.setEnabled(not is_heater_auto)
+        self.h2_checkbox.setChecked(is_heater_auto)
 
-        # emit temperature signals
-        self.t_signal.emit('%s K' % str(round(readings['Temp'], 3)))
-        self.t_setpoint_signal.emit(readings['TempSetpoint'])
-        self.t_ramp_signal.emit(readings['TempRamp'])
-        self.t_ramp_enable_signal.emit(readings['TempRampEnable'] == 'ON')
+        # gas flow signals
+        self.gf1_edit.updateValue(readings['FlowPercent'])
+        self.gf1_label.setText('Gas flow (min = %s%%):' % readings['FlowMin'])
+
+        is_gf_auto = readings['FlowAuto'] == 'ON'
+        self.gf2_checkbox.setChecked(is_gf_auto)
+        self.gf1_edit.setEnabled(not is_gf_auto)
+        self.gf1_edit.setReadOnly(is_gf_auto)
+
+        # temperature signals
+        self.t1_reading.setText('%s K' % round(readings['Temp'], 3))
+        self.t2_edit.updateValue('%s K' % round(readings['Temp'], 3))
+        self.r1_edit.updateValue(str(readings['TempRamp']))
+
+        is_ramp_enable = readings['TempRampEnable'] == 'ON'
+        self.r2_checkbox.setChecked(is_ramp_enable)
 
     @QtCore.Slot(object)
     def update_plot_data(self, readings):
@@ -505,15 +442,15 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.save_timer.timeout.connect(self.log_temperature_data)
         self.save_timer.start()
 
-    def save_temperature_data(self, filepath=None):
+    def save_temperature_data(self, path=None):
         # prompt user for file path if not given
-        if filepath is None:
+        if path is None:
             text = 'Select path for temperature data file:'
-            filepath = QtWidgets.QFileDialog.getSaveFileName(caption=text)
-            filepath = filepath[0]
+            path = QtWidgets.QFileDialog.getSaveFileName(caption=text)
+            path = path[0]
 
-        if not filepath.endswith('.txt'):
-            filepath += '.txt'
+        if not path.endswith('.txt'):
+            path += '.txt'
 
         title = 'temperature trace, saved on ' + time.strftime('%d/%m/%Y') + '\n'
         heater_vlim = self.feed.heater.vlim
@@ -526,7 +463,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
                                       self.ydata_gflw[:, np.newaxis]), axis=1)
 
         # noinspection PyTypeChecker
-        np.savetxt(filepath, data_matrix, delimiter='\t', header=title+header)
+        np.savetxt(path, data_matrix, delimiter='\t', header=title + header)
 
     def log_temperature_data(self):
         # save temperature data to log file
@@ -606,7 +543,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 # ========================== CALLBACKS FOR MENU BAR ===========================
 
     @QtCore.Slot()
-    def _on_readings_clicked(self):
+    def on_readings_clicked(self):
         # create readings overview window if not present
         if self.readingsWindow is None:
             self.readingsWindow = ReadingsOverview(self.feed.mercury)
