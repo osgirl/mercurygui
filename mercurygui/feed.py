@@ -135,7 +135,8 @@ class MercuryFeed(QtCore.QObject):
 
             # start data collection thread
             self.thread = QtCore.QThread()
-            self.worker = DataCollectionWorker(self.refresh, self.mercury, self.dialog.modNumbers)
+            self.worker = DataCollectionWorker(self.refresh, self.mercury,
+                                               self.dialog.modNumbers)
             self.worker.moveToThread(self.thread)
             self.worker.readings_signal.connect(self._get_data)
             self.worker.connected_signal.connect(self.connected_signal.emit)

@@ -280,7 +280,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
     def set_up_menubar(self):
         """
-        Connects menu bar items to functions, sets the initialactivated status.
+        Connects menu bar items to callbacks, sets their initial activation.
         """
         # connect to callbacks
         self.showLogAction.triggered.connect(self.on_log_clicked)
