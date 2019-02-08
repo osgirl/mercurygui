@@ -367,8 +367,8 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
 
         # temperature signals
         self.t1_reading.setText('%s K' % round(readings['Temp'], 3))
-        self.t2_edit.updateValue('%s K' % round(readings['Temp'], 3))
-        self.r1_edit.updateValue(str(readings['TempRamp']))
+        self.t2_edit.updateValue(readings['TempSetpoint'])
+        self.r1_edit.updateValue(readings['TempRamp'])
 
         is_ramp_enable = readings['TempRampEnable'] == 'ON'
         self.r2_checkbox.setChecked(is_ramp_enable)
