@@ -18,12 +18,12 @@ import platform
 import subprocess
 import pkg_resources as pkgr
 import time
-from qtpy import QtGui, QtCore, QtWidgets, uic
-import matplotlib as mpl
-from matplotlib.figure import Figure
 import numpy as np
 import logging
 from math import ceil, floor
+from qtpy import QtGui, QtCore, QtWidgets, uic
+import matplotlib as mpl
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg
                                                 as FigureCanvas,
                                                 NavigationToolbar2QT as
@@ -188,7 +188,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.statusbar.addPermanentWidget(self.led)
         self.led.setChecked(False)
 
-        # Set up figure for data plotting
+        # set up figure for plotting
         self.canvas = MercuryPlotCanvas(self)
         self.gridLayoutCanvas.addWidget(self.canvas)
         self.canvas.draw()
@@ -200,7 +200,7 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.gf1_unit.setStyleSheet('color:rgb%s' % str(tuple(self.canvas.BLUE*255)))
         self.h1_unit.setStyleSheet('color:rgb%s' % str(tuple(self.canvas.RED*255)))
 
-        # allow panning by user
+        # allow panning of plot
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.toolbar.hide()
         self.toolbar.pan()
@@ -216,12 +216,11 @@ class MercuryMonitorApp(QtWidgets.QMainWindow):
         self.restore_geometry()
         # Connect menu bar actions
         self.set_up_menubar()
-        # accept only numbers as input for fields
+        # set input validators for all fields
         self.set_input_validators()
 
-        # Check if mercury is connected, connect slots
-        self.display_message('Looking for Mercury at %s...'
-                             % self.feed.visa_address)
+        # check if mercury is connected, connect slots
+        self.display_message('Looking for Mercury at %s...' % self.feed.visa_address)
         if self.feed.mercury.connected:
             self.update_gui_connection(connected=True)
 
