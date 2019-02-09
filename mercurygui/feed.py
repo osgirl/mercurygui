@@ -27,25 +27,25 @@ class MercuryFeed(QtCore.QObject):
     enables other programs to get readings from the feed and reduced direct
     communication with the mercury.
 
-    New data from the selected modules is emitted by the `new_readings_signal`
+    New data from the selected modules is emitted by the :attr:`new_readings_signal`
     as a dictionary with entries:
 
-        Heater data:
-            'HeaterVolt'       # current heater voltage in V (float)
-            'HeaterAuto'       # automatic or manual control of heater (bool)
-            'HeaterPercent'    # heater percentage of maximum (float)
+    - Heater data:
+        'HeaterVolt'       # current heater voltage in V (float)
+        'HeaterAuto'       # automatic or manual control of heater (bool)
+        'HeaterPercent'    # heater percentage of maximum (float)
 
-        Gas flow data:
-            'FlowAuto'         # automatic or manual control of needle valve (bool)
-            'FlowPercent'      # actual needle valve opening in percent (float)
-            'FlowMin'          # needle valve minimum allowed opening (float)
-            'FlowSetpoint'     # needle valve opening setpoint in percent (float)
+    - Gas flow data:
+        'FlowAuto'         # automatic or manual control of needle valve (bool)
+        'FlowPercent'      # actual needle valve opening in percent (float)
+        'FlowMin'          # needle valve minimum allowed opening (float)
+        'FlowSetpoint'     # needle valve opening setpoint in percent (float)
 
-        Temperature data:
-            'Temp'             # actual temperature in K (float)
-            'TempSetpoint'     # temperature setpoint in K (float)
-            'TempRamp'         # temperature ramp speed in K/min (float)
-            'TempRampEnable'   # ramp enabled or disabled (bool)
+    - Temperature data:
+        'Temp'             # actual temperature in K (float)
+        'TempSetpoint'     # temperature setpoint in K (float)
+        'TempRamp'         # temperature ramp speed in K/min (float)
+        'TempRampEnable'   # ramp enabled or disabled (bool)
 
     You can receive the emitted readings as follows:
 
@@ -60,10 +60,10 @@ class MercuryFeed(QtCore.QObject):
         >>> # connect signal to function
         >>> connection = feed.new_readings_signal.connect(print_temperature)
 
-    `print_temperature` will then be executed with the emitted readings
+    :func:`print_temperature` will then be executed with the emitted readings
     dictionary as argument every time a new signal is emitted.
 
-    `MercuryFeed` will also handle maintaining the connection for you: it will
+    :class:`MercuryFeed` will also handle maintaining the connection for you:: it will
     periodically try to find the MercuryiTC if not connected, and emit warnings
     when it looses an established connection.
     """
@@ -159,6 +159,9 @@ class MercuryFeed(QtCore.QObject):
     def _get_data(self, readings_from_thread):
         self.readings = readings_from_thread
         self.new_readings_signal.emit(self.readings)
+
+    def __repr__(self):
+        return '<%s(%s)>' % (type(self).__name__, self.visa_address)
 
 
 class SensorDialog(QtWidgets.QDialog):
